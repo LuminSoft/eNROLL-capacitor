@@ -264,4 +264,4 @@ The `startEnroll` promise resolves with `EnrollSuccessResult`:
 ## 9. ADDITIONAL RESOURCES
 
 * **npm package:** [enroll-capacitor](https://www.npmjs.com/package/enroll-capacitor)
-* **GitHub:** [https://github.com/LuminSoft/enroll-capacitor](https://github.com/LuminSoft/enroll-capacitor)
+* **GitHub:** [https://github.com/LuminSoft/eNROLL-capacitor](https://github.com/LuminSoft/eNROLL-capacitor)

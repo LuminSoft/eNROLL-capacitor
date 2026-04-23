@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="hydrated">
+  <head>
+    <meta charset="UTF-8" />
+    <title>eNROLL Capacitor Example</title>
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --text: #14304a;
+        --muted: #5a6f82;
+        --border: #d7e0ea;
+        --primary: #1d56b8;
+        --primary-dark: #15408b;
+        --success: #1f8f52;
+        --error: #c23737;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #eef4fb 0%, #f7f9fc 100%);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+
+      .hero {
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 28px rgba(20, 48, 74, 0.08);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 14px;
+        color: var(--text);
+        background: #fff;
+      }
+
+      .field textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 10px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary-btn {
+        background: var(--primary);
+        color: white;
+      }
+
+      .primary-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      .secondary-btn {
+        background: #e9eef7;
+        color: var(--text);
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #eef4fb;
+        color: var(--muted);
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+
+      .status.success {
+        background: #e7f6ee;
+        color: var(--success);
+      }
+
+      .status.error {
+        background: #fdecec;
+        color: var(--error);
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .result-box {
+        background: #f9fbfd;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .result-box h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      .result-box pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .note {
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <h1>eNROLL Capacitor Example</h1>
+
+      </section>
+
+      <section class="card">
+        <div class="grid">
+          <div class="field">
+            <label for="tenantId">Tenant ID</label>
+            <input id="tenantId" value="TENANT_ID" />
+          </div>
+          <div class="field">
+            <label for="tenantSecret">Tenant Secret</label>
+            <input id="tenantSecret" value="TENANT_SECRET" />
+          </div>
+          <div class="field">
+            <label for="enrollMode">Enroll Mode</label>
+            <select id="enrollMode">
+              <option value="onboarding" selected>onboarding</option>
+              <option value="auth">auth</option>
+              <option value="update">update</option>
+              <option value="signContract">signContract</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="enrollEnvironment">Environment</label>
+            <select id="enrollEnvironment">
+              <option value="staging" selected>staging</option>
+              <option value="production">production</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="localizationCode">Localization</label>
+            <select id="localizationCode">
+              <option value="en" selected>en</option>
+              <option value="ar">ar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="applicationId">Application ID</label>
+            <input id="applicationId" value="APPLICATION_ID" />
+          </div>
+          <div class="field">
+            <label for="levelOfTrust">Level Of Trust</label>
+            <input id="levelOfTrust" value="LEVEL_OF_TRUST_TOKEN" />
+          </div>
+          <div class="field">
+            <label for="requestId">Request ID</label>
+            <input id="requestId" value="REQUEST_ID" />
+          </div>
+          <div class="field">
+            <label for="googleApiKey">Google API Key</label>
+            <input id="googleApiKey" value="GOOGLE_API_KEY" />
+          </div>
+          <div class="field">
+            <label for="correlationId">Correlation ID</label>
+            <input id="correlationId" value="correlationIdTest" />
+          </div>
+          <div class="field">
+            <label for="templateId">Template ID</label>
+            <input id="templateId" value="templateId" />
+          </div>
+          <div class="field">
+            <label for="enrollExitStep">Exit Step</label>
+            <select id="enrollExitStep">
+              <option value="">none</option>
+              <option value="phoneOtp">phoneOtp</option>
+              <option value="personalConfirmation" selected>personalConfirmation</option>
+              <option value="smileLiveness">smileLiveness</option>
+              <option value="emailOtp">emailOtp</option>
+              <option value="saveMobileDevice">saveMobileDevice</option>
+              <option value="deviceLocation">deviceLocation</option>
+              <option value="password">password</option>
+              <option value="securityQuestions">securityQuestions</option>
+              <option value="amlCheck">amlCheck</option>
+              <option value="termsAndConditions">termsAndConditions</option>
+              <option value="electronicSignature">electronicSignature</option>
+              <option value="ntraCheck">ntraCheck</option>
+              <option value="csoCheck">csoCheck</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: 16px;">
+          <label for="contractParameters">Contract Parameters</label>
+          <textarea id="contractParameters">contractParameters</textarea>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="skipTutorial" type="checkbox" />
+          <label for="skipTutorial">Skip Tutorial</label>
+        </div>
+
+        <div class="actions">
+          <button id="startEnrollButton" class="primary-btn" type="button">Start eNROLL</button>
+          <button id="fillDefaultsButton" class="secondary-btn" type="button">Fill Defaults</button>
+          <button id="clearResultsButton" class="secondary-btn" type="button">Clear Results</button>
+        </div>
+
+        <div id="statusBox" class="status">Ready to launch eNROLL.</div>
+        <p class="note">
+          This example works on native Android/iOS Capacitor apps. Browser preview can render the
+          page, but the real SDK flow needs a native app runtime.
+        </p>
+      </section>
+
+      <section class="result-grid">
+        <div class="result-box">
+          <h2>Request ID Event</h2>
+          <pre id="requestIdResult">No request ID received yet.</pre>
+        </div>
+        <div class="result-box">
+          <h2>Success Result</h2>
+          <pre id="successResult">No success result yet.</pre>
+        </div>
+        <div class="result-box">
+          <h2>Error Result</h2>
+          <pre id="errorResult">No error result yet.</pre>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/example.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "appId": "com.example.plugin",
+  "appName": "example-app",
+  "webDir": "dist",
+  "ios": {
+    "packageManager": "CocoaPods"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}

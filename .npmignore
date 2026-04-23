@@ -1,0 +1,37 @@
+# Example app (not part of the published package)
+example-app/
+scripts/
+docs/
+.github/
+
+# Development files
+.derived-data/
+.eslintignore
+.prettierignore
+
+# Build artifacts
+android/build/
+android/.gradle/
+ios/Pods/
+ios/Build/
+
+# License files
+*.lic
+
+# macOS
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+*.iml
+
+# Architecture and internal docs
+ARCHITECTURE.md
+DEPLOYMENT.md
+CONTRIBUTING.md
+PROJECT_RULES.md
+TASKS.md

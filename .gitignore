@@ -69,6 +69,9 @@ captures
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 
+# Internal docs (local only, not pushed to GitHub)
+.internal/
+
 # License files (private per applicationId)
 *.lic
 

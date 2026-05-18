@@ -18,7 +18,6 @@ const defaultValues = {
   logoMode: 'custom',
   logoAssetName: 'enroll_test_logo',
   logoRenderingMode: 'original',
-  showSponsoredBy: false,
 };
 
 const fieldIds = [
@@ -38,7 +37,6 @@ const fieldIds = [
   'logoMode',
   'logoAssetName',
   'logoRenderingMode',
-  'showSponsoredBy',
   'skipTutorial',
 ];
 
@@ -86,7 +84,6 @@ function collectEnrollTheme() {
   const logo = {
     mode: logoMode,
     renderingMode: document.getElementById('logoRenderingMode').value,
-    showSponsoredBy: document.getElementById('showSponsoredBy').checked,
   };
 
   if (logoMode === 'custom' && logoAssetName !== undefined) {
@@ -117,7 +114,6 @@ function applyDefaults() {
   document.getElementById('logoMode').value = defaultValues.logoMode;
   document.getElementById('logoAssetName').value = defaultValues.logoAssetName;
   document.getElementById('logoRenderingMode').value = defaultValues.logoRenderingMode;
-  document.getElementById('showSponsoredBy').checked = defaultValues.showSponsoredBy;
   document.getElementById('skipTutorial').checked = defaultValues.skipTutorial;
 }
 

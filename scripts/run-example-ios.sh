@@ -9,6 +9,7 @@ WORKSPACE_PATH="$IOS_DIR/App.xcworkspace"
 SCHEME="App"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 DEVICE_ID="${DEVICE_ID:-}"
+DEVICE_KIND="${DEVICE_KIND:-}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$ROOT_DIR/.derived-data/run-example-ios}"
 PLUGIN_PACKAGE_NAME="$(sed -n 's/  "name": "\(.*\)",/\1/p' "$ROOT_DIR/package.json" | head -n 1)"
 
@@ -25,6 +26,36 @@ list_connected_ios_devices() {
       }
     }
   '
+}
+
+list_booted_ios_simulators() {
+  xcrun simctl list devices booted | awk '
+    /^-- iOS / { in_ios=1; next }
+    /^-- / { in_ios=0 }
+    in_ios && /\(Booted\)/ {
+      line=$0
+      sub(/^[ \t]+/, "", line)
+      print line
+    }
+  '
+}
+
+extract_device_id() {
+  sed -n 's/.*(\([A-F0-9-]\{10,\}\)).*/\1/p'
+}
+
+detect_device_kind() {
+  if [[ -n "$DEVICE_KIND" ]]; then
+    return
+  fi
+
+  if xcrun simctl list devices | grep -q "($DEVICE_ID)"; then
+    DEVICE_KIND="simulator"
+  elif [[ "$DEVICE_ID" =~ ^[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}$ ]]; then
+    DEVICE_KIND="simulator"
+  else
+    DEVICE_KIND="device"
+  fi
 }
 
 ensure_example_dependency() {
@@ -44,34 +75,47 @@ ensure_example_dependency() {
 
 select_device_if_needed() {
   if [[ -n "$DEVICE_ID" ]]; then
+    detect_device_kind
     return
   fi
 
   device_lines=()
   device_ids=()
+  device_kinds=()
 
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
     device_lines+=("$line")
-    device_ids+=("$(printf '%s\n' "$line" | sed -n 's/.*(\([A-F0-9-]\{10,\}\)).*/\1/p')")
+    device_ids+=("$(printf '%s\n' "$line" | extract_device_id)")
+    device_kinds+=("device")
   done < <(list_connected_ios_devices)
 
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    device_lines+=("$line")
+    device_ids+=("$(printf '%s\n' "$line" | extract_device_id)")
+    device_kinds+=("simulator")
+  done < <(list_booted_ios_simulators)
+
   if [[ ${#device_ids[@]} -eq 0 ]]; then
-    echo "No connected iPhone/iPad devices found." >&2
+    echo "No connected iPhone/iPad devices or booted iOS simulators found." >&2
     exit 1
   fi
 
   if [[ ${#device_ids[@]} -eq 1 ]]; then
     DEVICE_ID="${device_ids[0]}"
-    echo "==> Using detected iOS device: ${device_lines[0]}"
+    DEVICE_KIND="${device_kinds[0]}"
+    echo "==> Using detected iOS $DEVICE_KIND: ${device_lines[0]}"
     return
   fi
 
-  echo "==> Multiple iOS devices detected. Please choose one:"
+  echo "==> Multiple iOS targets detected. Please choose one:"
   select chosen_line in "${device_lines[@]}"; do
     if [[ -n "${chosen_line:-}" ]]; then
-      DEVICE_ID="$(printf '%s\n' "$chosen_line" | sed -n 's/.*(\([A-F0-9-]\{10,\}\)).*/\1/p')"
-      echo "==> Selected device: $chosen_line"
+      local selected_index=$((REPLY - 1))
+      DEVICE_ID="${device_ids[$selected_index]}"
+      DEVICE_KIND="${device_kinds[$selected_index]}"
+      echo "==> Selected iOS $DEVICE_KIND: $chosen_line"
       break
     fi
     echo "Invalid selection. Try again."
@@ -91,11 +135,16 @@ npm run build
 echo "==> Syncing iOS Capacitor project"
 npx cap sync ios
 
-echo "==> Checking connected iOS devices"
-list_connected_ios_devices
+if [[ -z "$DEVICE_ID" ]]; then
+  echo "==> Checking connected iOS devices and booted simulators"
+  list_connected_ios_devices
+  list_booted_ios_simulators
+else
+  echo "==> Using provided iOS target: $DEVICE_ID"
+fi
 select_device_if_needed
 
-echo "==> Building iOS app for device $DEVICE_ID"
+echo "==> Building iOS app for $DEVICE_KIND $DEVICE_ID"
 xcodebuild \
   -workspace "$WORKSPACE_PATH" \
   -scheme "$SCHEME" \
@@ -104,7 +153,13 @@ xcodebuild \
   -derivedDataPath "$DERIVED_DATA_PATH" \
   build
 
-APP_PATH="$DERIVED_DATA_PATH/Build/Products/${CONFIGURATION}-iphoneos/App.app"
+if [[ "$DEVICE_KIND" == "simulator" ]]; then
+  SDK_DIR="iphonesimulator"
+else
+  SDK_DIR="iphoneos"
+fi
+
+APP_PATH="$DERIVED_DATA_PATH/Build/Products/${CONFIGURATION}-$SDK_DIR/App.app"
 
 if [[ -z "$APP_PATH" || ! -d "$APP_PATH" ]]; then
   echo "Built App.app not found in DerivedData." >&2
@@ -112,7 +167,11 @@ if [[ -z "$APP_PATH" || ! -d "$APP_PATH" ]]; then
 fi
 
 echo "==> Installing app"
-xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH"
+if [[ "$DEVICE_KIND" == "simulator" ]]; then
+  xcrun simctl install "$DEVICE_ID" "$APP_PATH"
+else
+  xcrun devicectl device install app --device "$DEVICE_ID" "$APP_PATH"
+fi
 
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")"
 
@@ -122,8 +181,13 @@ if [[ -z "$BUNDLE_ID" ]]; then
 fi
 
 echo "==> Launching app"
-xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
+if [[ "$DEVICE_KIND" == "simulator" ]]; then
+  xcrun simctl launch "$DEVICE_ID" "$BUNDLE_ID"
+else
+  xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
+fi
 
 echo "==> Done"
+echo "Target kind: $DEVICE_KIND"
 echo "Device ID: $DEVICE_ID"
 echo "Bundle ID: $BUNDLE_ID"

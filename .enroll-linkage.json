@@ -8,7 +8,7 @@
     "androidArtifact": "com.github.LuminSoft:eNROLL-Android",
     "androidVersion": "v1.5.24",
     "iosDistribution": "pod",
-    "iosVersion": "~> 3.0.7",
+    "iosVersion": "~> 3.0.9",
     "xcframeworkSource": null
   },
   "pluginVersion": "1.0.0",
@@ -88,14 +88,12 @@
       "docs/integration-ios.md",
       "docs/integration-ionic-angular.md"
     ],
-    "missingDocsForFeatures": [
-      "forgetProfileData"
-    ]
+    "missingDocsForFeatures": []
   },
   "workflowCommands": {
     "checkNativeToFlutter": "/check-native-to-flutter",
     "copyFlutterToSiblingPlugins": "/copy-flutter-to-sibling-plugins",
     "checkSync": "bash /Users/luminsoft/StudioProjects/ekyc-android/scripts/check-enroll-sync.sh"
   },
-  "lastVerifiedAt": "2026-05-17T17:06:00Z"
+  "lastVerifiedAt": "2026-05-18T11:14:00Z"
 }

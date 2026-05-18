@@ -91,6 +91,12 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             return generateDynamicColors(colors: colorsObj)
         }()
 
+        // ---- Theme (colors + icons) ----
+        let enrollTheme: EnrollTheme? = {
+            guard let themeObj = call.getObject("enrollTheme") else { return nil }
+            return self.generateDynamicTheme(theme: themeObj)
+        }()
+
         // ---- RTL layout for Arabic ----
         configureLayoutDirection(localizationCode)
 
@@ -118,6 +124,7 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
                     enrollMode: enrollMode,
                     skipTutorial: skipTutorial,
                     enrollColors: enrollColors,
+                    enrollTheme: enrollTheme,
                     levelOffTrustId: levelOfTrust.isEmpty ? nil : levelOfTrust,
                     applicantId: applicationId.isEmpty ? nil : applicationId,
                     correlationId: correlationId.isEmpty ? nil : correlationId,
@@ -321,6 +328,331 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             green: CGFloat(g) / 255.0,
             blue: CGFloat(b) / 255.0,
             alpha: CGFloat(opacity)
+        )
+    }
+
+    // ------------------------------------------------------------------
+    // MARK: - Theme parsing
+    // ------------------------------------------------------------------
+
+    private func generateDynamicTheme(theme: [String: Any]?) -> EnrollTheme {
+        guard let theme = theme else {
+            return EnrollTheme()
+        }
+
+        var enrollColors: EnrollColors?
+        if let colorDict = theme["colors"] as? [String: Any] {
+            enrollColors = generateDynamicColors(colors: colorDict)
+        }
+
+        var appIcons = AppIcons()
+        if let iconsDict = theme["icons"] as? [String: Any] {
+            appIcons = generateAppIcons(from: iconsDict)
+        }
+
+        return EnrollTheme(icons: appIcons, colors: enrollColors)
+    }
+
+    private func generateAppIcons(from dictionary: [String: Any]) -> AppIcons {
+        var logo = LogoConfig()
+        var location = LocationIcons()
+        var nationalId: NationalIdIcons?
+        var passport = PassportIcons()
+        var phone = PhoneIcons()
+        var email = EmailIcons()
+        var faceMatching = FaceMatchingIcons()
+        var securityQuestions = SecurityQuestionsIcons()
+        var password = PasswordIcons()
+        var signature = SignatureIcons()
+        var common = CommonIcons()
+        var update = UpdateIcons()
+        var forget = ForgetIcons()
+
+        if let logoDict = dictionary["logo"] as? [String: Any] {
+            logo = parseLogoConfig(from: logoDict)
+        }
+        if let locationDict = dictionary["location"] as? [String: Any] {
+            location = parseLocationIcons(from: locationDict)
+        }
+        if let nationalIdDict = dictionary["nationalId"] as? [String: Any] {
+            nationalId = parseNationalIdIcons(from: nationalIdDict)
+        }
+        if let passportDict = dictionary["passport"] as? [String: Any] {
+            passport = parsePassportIcons(from: passportDict)
+        }
+        if let phoneDict = dictionary["phone"] as? [String: Any] {
+            phone = parsePhoneIcons(from: phoneDict)
+        }
+        if let emailDict = dictionary["email"] as? [String: Any] {
+            email = parseEmailIcons(from: emailDict)
+        }
+        if let faceMatchingDict = dictionary["faceMatching"] as? [String: Any] {
+            faceMatching = parseFaceMatchingIcons(from: faceMatchingDict)
+        }
+        if let securityQuestionsDict = dictionary["securityQuestions"] as? [String: Any] {
+            securityQuestions = parseSecurityQuestionsIcons(from: securityQuestionsDict)
+        }
+        if let passwordDict = dictionary["password"] as? [String: Any] {
+            password = parsePasswordIcons(from: passwordDict)
+        }
+        if let signatureDict = dictionary["signature"] as? [String: Any] {
+            signature = parseSignatureIcons(from: signatureDict)
+        }
+        if let commonDict = dictionary["common"] as? [String: Any] {
+            common = parseCommonIcons(from: commonDict)
+        }
+        if let updateDict = dictionary["update"] as? [String: Any] {
+            update = parseUpdateIcons(from: updateDict)
+        }
+        if let forgetDict = dictionary["forget"] as? [String: Any] {
+            forget = parseForgetIcons(from: forgetDict)
+        }
+
+        return AppIcons(
+            logo: logo,
+            location: location,
+            nationalId: nationalId,
+            passport: passport,
+            phone: phone,
+            email: email,
+            faceMatching: faceMatching,
+            securityQuestions: securityQuestions,
+            password: password,
+            signature: signature,
+            common: common,
+            update: update,
+            forget: forget
+        )
+    }
+
+    private func parseLogoConfig(from dictionary: [String: Any]) -> LogoConfig {
+        var mode: LogoMode = .default
+        var icon: EnrollIcon?
+
+        if let modeString = dictionary["mode"] as? String {
+            switch modeString.lowercased() {
+            case "hidden":
+                mode = .hidden
+            case "custom":
+                mode = .custom
+            default:
+                mode = .default
+            }
+        }
+
+        if let _ = dictionary["assetName"] as? String {
+            icon = parseEnrollIcon(from: dictionary)
+        }
+
+        return LogoConfig(mode: mode, icon: icon)
+    }
+
+    private func parseEnrollIcon(from dictionary: [String: Any]) -> EnrollIcon {
+        let assetName = dictionary["assetName"] as? String ?? ""
+
+        var renderingMode: EnrollIconRenderingMode = .original
+        if let renderingModeString = dictionary["renderingMode"] as? String {
+            renderingMode = renderingModeString.lowercased() == "template" ? .template : .original
+        }
+
+        var validationMode: IconValidationMode = .relaxed
+        if let validationModeString = dictionary["validationMode"] as? String {
+            validationMode = validationModeString.lowercased() == "strict" ? .strict : .relaxed
+        }
+
+        let bundle = Bundle.main
+
+        return EnrollIcon(
+            assetName: assetName,
+            renderingMode: renderingMode,
+            bundle: bundle,
+            validationMode: validationMode
+        )
+    }
+
+    private func parseStepIcon(from dictionary: [String: Any]) -> StepIcon? {
+        guard let _ = dictionary as? [String: Any] else {
+            return nil
+        }
+
+        guard let enrollIcon = parseEnrollIcon(from: dictionary) as? EnrollIcon else {
+            return nil
+        }
+
+        return StepIcon(icon: enrollIcon)
+    }
+
+    private func parseLocationIcons(from dictionary: [String: Any]) -> LocationIcons {
+        return LocationIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            requestAccess: parseStepIcon(from: dictionary["requestAccess"] as? [String: Any] ?? [:]),
+            accessError: parseStepIcon(from: dictionary["accessError"] as? [String: Any] ?? [:]),
+            grab: parseStepIcon(from: dictionary["grab"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseNationalIdIcons(from dictionary: [String: Any]) -> NationalIdIcons {
+        return NationalIdIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            tutorialIdOrPassport: parseStepIcon(from: dictionary["tutorialIdOrPassport"] as? [String: Any] ?? [:]),
+            preScan: parseStepIcon(from: dictionary["preScan"] as? [String: Any] ?? [:]),
+            scanError: parseStepIcon(from: dictionary["scanError"] as? [String: Any] ?? [:]),
+            choose: parseStepIcon(from: dictionary["choose"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parsePassportIcons(from dictionary: [String: Any]) -> PassportIcons {
+        return PassportIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            preScan: parseStepIcon(from: dictionary["preScan"] as? [String: Any] ?? [:]),
+            ePassportPreScan: parseStepIcon(from: dictionary["ePassportPreScan"] as? [String: Any] ?? [:]),
+            choose: parseStepIcon(from: dictionary["choose"] as? [String: Any] ?? [:]),
+            scanError: parseStepIcon(from: dictionary["scanError"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parsePhoneIcons(from dictionary: [String: Any]) -> PhoneIcons {
+        return PhoneIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            select: parseStepIcon(from: dictionary["select"] as? [String: Any] ?? [:]),
+            validateOtp: parseStepIcon(from: dictionary["validateOtp"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseEmailIcons(from dictionary: [String: Any]) -> EmailIcons {
+        return EmailIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            select: parseStepIcon(from: dictionary["select"] as? [String: Any] ?? [:]),
+            validateOtp: parseStepIcon(from: dictionary["validateOtp"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseFaceMatchingIcons(from dictionary: [String: Any]) -> FaceMatchingIcons {
+        return FaceMatchingIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            preScan: parseStepIcon(from: dictionary["preScan"] as? [String: Any] ?? [:]),
+            error: parseStepIcon(from: dictionary["error"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseSecurityQuestionsIcons(from dictionary: [String: Any]) -> SecurityQuestionsIcons {
+        return SecurityQuestionsIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            authScreen: parseStepIcon(from: dictionary["authScreen"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parsePasswordIcons(from dictionary: [String: Any]) -> PasswordIcons {
+        return PasswordIcons(
+            tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]),
+            authScreen: parseStepIcon(from: dictionary["authScreen"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseSignatureIcons(from dictionary: [String: Any]) -> SignatureIcons {
+        return SignatureIcons(tutorial: parseStepIcon(from: dictionary["tutorial"] as? [String: Any] ?? [:]))
+    }
+
+    private func parseBackgroundIcons(from dictionary: [String: Any]) -> BackgroundIcons {
+        return BackgroundIcons(
+            main: parseStepIcon(from: dictionary["main"] as? [String: Any] ?? [:]),
+            layer1: parseStepIcon(from: dictionary["layer1"] as? [String: Any] ?? [:]),
+            layer2: parseStepIcon(from: dictionary["layer2"] as? [String: Any] ?? [:]),
+            layer3: parseStepIcon(from: dictionary["layer3"] as? [String: Any] ?? [:]),
+            blur: parseStepIcon(from: dictionary["blur"] as? [String: Any] ?? [:]),
+            header: parseStepIcon(from: dictionary["header"] as? [String: Any] ?? [:]),
+            footer: parseStepIcon(from: dictionary["footer"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parsePopupIcons(from dictionary: [String: Any]) -> PopupIcons {
+        return PopupIcons(
+            background: parseStepIcon(from: dictionary["background"] as? [String: Any] ?? [:]),
+            warningIcon: parseStepIcon(from: dictionary["warningIcon"] as? [String: Any] ?? [:]),
+            errorIcon: parseStepIcon(from: dictionary["errorIcon"] as? [String: Any] ?? [:]),
+            successIcon: parseStepIcon(from: dictionary["successIcon"] as? [String: Any] ?? [:]),
+            errorSign: parseStepIcon(from: dictionary["errorSign"] as? [String: Any] ?? [:]),
+            successSign: parseStepIcon(from: dictionary["successSign"] as? [String: Any] ?? [:]),
+            warningSign: parseStepIcon(from: dictionary["warningSign"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseFieldIcons(from dictionary: [String: Any]) -> FieldIcons {
+        return FieldIcons(
+            user: parseStepIcon(from: dictionary["user"] as? [String: Any] ?? [:]),
+            calendar: parseStepIcon(from: dictionary["calendar"] as? [String: Any] ?? [:]),
+            gender: parseStepIcon(from: dictionary["gender"] as? [String: Any] ?? [:]),
+            issuingAuthority: parseStepIcon(from: dictionary["issuingAuthority"] as? [String: Any] ?? [:]),
+            nationality: parseStepIcon(from: dictionary["nationality"] as? [String: Any] ?? [:]),
+            num: parseStepIcon(from: dictionary["num"] as? [String: Any] ?? [:]),
+            passport: parseStepIcon(from: dictionary["passport"] as? [String: Any] ?? [:]),
+            address: parseStepIcon(from: dictionary["address"] as? [String: Any] ?? [:]),
+            idCard: parseStepIcon(from: dictionary["idCard"] as? [String: Any] ?? [:]),
+            profession: parseStepIcon(from: dictionary["profession"] as? [String: Any] ?? [:]),
+            religion: parseStepIcon(from: dictionary["religion"] as? [String: Any] ?? [:]),
+            maritalStatus: parseStepIcon(from: dictionary["maritalStatus"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseUiIcons(from dictionary: [String: Any]) -> UiIcons {
+        return UiIcons(
+            visibility: parseStepIcon(from: dictionary["visibility"] as? [String: Any] ?? [:]),
+            visibilityOff: parseStepIcon(from: dictionary["visibilityOff"] as? [String: Any] ?? [:]),
+            mobile: parseStepIcon(from: dictionary["mobile"] as? [String: Any] ?? [:]),
+            mail: parseStepIcon(from: dictionary["mail"] as? [String: Any] ?? [:]),
+            answer: parseStepIcon(from: dictionary["answer"] as? [String: Any] ?? [:]),
+            error: parseStepIcon(from: dictionary["error"] as? [String: Any] ?? [:]),
+            info: parseStepIcon(from: dictionary["info"] as? [String: Any] ?? [:]),
+            edit: parseStepIcon(from: dictionary["edit"] as? [String: Any] ?? [:]),
+            activePhone: parseStepIcon(from: dictionary["activePhone"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseCommonIcons(from dictionary: [String: Any]) -> CommonIcons {
+        let backgroundsDict = dictionary["backgrounds"] as? [String: Any] ?? [:]
+        let backgrounds = parseBackgroundIcons(from: backgroundsDict)
+        let popupsDict = dictionary["popups"] as? [String: Any] ?? [:]
+        let popups = parsePopupIcons(from: popupsDict)
+        let fieldIconsDict = dictionary["fieldIcons"] as? [String: Any] ?? [:]
+        let fieldIcons = parseFieldIcons(from: fieldIconsDict)
+        let uiDict = dictionary["ui"] as? [String: Any] ?? [:]
+        let ui = parseUiIcons(from: uiDict)
+        let termsAndConditions = parseStepIcon(from: dictionary["termsAndConditions"] as? [String: Any] ?? [:])
+
+        return CommonIcons(
+            backgrounds: backgrounds,
+            popups: popups,
+            fieldIcons: fieldIcons,
+            ui: ui,
+            termsAndConditions: termsAndConditions
+        )
+    }
+
+    private func parseUpdateIcons(from dictionary: [String: Any]) -> UpdateIcons {
+        return UpdateIcons(
+            modeIcon: parseStepIcon(from: dictionary["modeIcon"] as? [String: Any] ?? [:]),
+            idCard: parseStepIcon(from: dictionary["idCard"] as? [String: Any] ?? [:]),
+            passport: parseStepIcon(from: dictionary["passport"] as? [String: Any] ?? [:]),
+            mobile: parseStepIcon(from: dictionary["mobile"] as? [String: Any] ?? [:]),
+            email: parseStepIcon(from: dictionary["email"] as? [String: Any] ?? [:]),
+            device: parseStepIcon(from: dictionary["device"] as? [String: Any] ?? [:]),
+            address: parseStepIcon(from: dictionary["address"] as? [String: Any] ?? [:]),
+            securityQuestions: parseStepIcon(from: dictionary["securityQuestions"] as? [String: Any] ?? [:]),
+            password: parseStepIcon(from: dictionary["password"] as? [String: Any] ?? [:])
+        )
+    }
+
+    private func parseForgetIcons(from dictionary: [String: Any]) -> ForgetIcons {
+        return ForgetIcons(
+            modeIcon: parseStepIcon(from: dictionary["modeIcon"] as? [String: Any] ?? [:]),
+            nationalId: parseStepIcon(from: dictionary["nationalId"] as? [String: Any] ?? [:]),
+            passport: parseStepIcon(from: dictionary["passport"] as? [String: Any] ?? [:]),
+            phone: parseStepIcon(from: dictionary["phone"] as? [String: Any] ?? [:]),
+            email: parseStepIcon(from: dictionary["email"] as? [String: Any] ?? [:]),
+            device: parseStepIcon(from: dictionary["device"] as? [String: Any] ?? [:]),
+            location: parseStepIcon(from: dictionary["location"] as? [String: Any] ?? [:]),
+            securityQuestions: parseStepIcon(from: dictionary["securityQuestions"] as? [String: Any] ?? [:]),
+            password: parseStepIcon(from: dictionary["password"] as? [String: Any] ?? [:])
         )
     }
 

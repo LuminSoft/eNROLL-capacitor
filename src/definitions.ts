@@ -93,7 +93,7 @@ export interface EnrollColors {
 }
 
 // ---------------------------------------------------------------------------
-// Icon types (Android only — icons are not yet supported on iOS)
+// Icon types (supported on Android and iOS)
 // ---------------------------------------------------------------------------
 
 /**
@@ -288,7 +288,7 @@ export interface EnrollForgetIcons {
  * Top-level icon configuration for the eNROLL SDK.
  * All fields are optional — when omitted, the SDK uses its built-in assets.
  *
- * **Android only.** Icons are not yet supported on iOS.
+ * Supported on **Android and iOS**. Asset names reference platform-specific resources.
  */
 export interface EnrollIcons {
   logo?: EnrollLogoConfig;
@@ -319,13 +319,12 @@ export interface EnrollIcons {
  * If both `enrollTheme` and `appColors` are provided on {@link StartEnrollOptions},
  * `enrollTheme` takes priority and `appColors` is ignored.
  *
- * > **Icons are Android only.** iOS support is planned for a future release.
- * > Colors work on both platforms.
+ * Both colors and icons are supported on **Android and iOS**.
  */
 export interface EnrollTheme {
   /** Color customization for the SDK UI. Works on Android and iOS. */
   colors?: EnrollColors;
-  /** Icon customization for logo and step illustrations. **Android only.** */
+  /** Icon customization for logo and step illustrations. Works on Android and iOS. */
   icons?: EnrollIcons;
 }
 
@@ -384,7 +383,7 @@ export interface StartEnrollOptions {
 
   /**
    * Unified theme configuration (colors + icons).
-   * Icons are **Android only**; colors work on both platforms.
+   * Both colors and icons work on **Android and iOS**.
    * Takes priority over `appColors` when both are provided.
    */
   enrollTheme?: EnrollTheme;

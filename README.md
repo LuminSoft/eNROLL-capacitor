@@ -228,7 +228,7 @@ const result = await Enroll.startEnroll({
 
 ## Theme Customization
 
-The eNROLL SDK supports full theme customization via `enrollTheme`. Colors work on **both** Android and iOS. Icons are **Android only**.
+The eNROLL SDK supports full theme customization via `enrollTheme`. Both colors and icons work on **Android and iOS**.
 
 ### Colors
 
@@ -249,9 +249,11 @@ await Enroll.startEnroll({
 });
 ```
 
-### Icons (Android only)
+### Icons
 
-Icon `assetName` values correspond to Android drawable resource names in your app's `res/drawable` folder.
+Icon `assetName` values reference platform-specific image assets:
+- **Android**: drawable resource names in your app's `res/drawable` folder
+- **iOS**: image asset names in your app's `Assets.xcassets`
 
 ```typescript
 await Enroll.startEnroll({
@@ -288,7 +290,7 @@ Used with `enrollExitStep` to terminate the flow after a specific step:
 | Feature | Android | iOS |
 |---------|---------|-----|
 | Color theming | ✅ | ✅ |
-| Icon customization | ✅ | ❌ (planned) |
+| Icon customization | ✅ | ✅ |
 | Biometric SDK (Innovatrics) | ✅ | ✅ |
 | Simulator support | ✅ (emulator) | ❌ (device only) |
 

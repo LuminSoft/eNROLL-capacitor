@@ -15,6 +15,10 @@ const defaultValues = {
   templateId: 'templateId',
   contractParameters: 'contractParameters',
   enrollExitStep: 'personalConfirmation',
+  logoMode: 'custom',
+  logoAssetName: 'enroll_test_logo',
+  logoRenderingMode: 'original',
+  showSponsoredBy: false,
 };
 
 const fieldIds = [
@@ -31,6 +35,10 @@ const fieldIds = [
   'templateId',
   'contractParameters',
   'enrollExitStep',
+  'logoMode',
+  'logoAssetName',
+  'logoRenderingMode',
+  'showSponsoredBy',
   'skipTutorial',
 ];
 
@@ -63,6 +71,35 @@ function normalizeOptionalString(value) {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function normalizeOptionalField(value) {
+  if (typeof value === 'string') {
+    return normalizeOptionalString(value);
+  }
+
+  return value;
+}
+
+function collectEnrollTheme() {
+  const logoMode = document.getElementById('logoMode').value;
+  const logoAssetName = normalizeOptionalString(document.getElementById('logoAssetName').value);
+
+  const logo = {
+    mode: logoMode,
+    renderingMode: document.getElementById('logoRenderingMode').value,
+    showSponsoredBy: document.getElementById('showSponsoredBy').checked,
+  };
+
+  if (logoMode === 'custom' && logoAssetName !== undefined) {
+    logo.assetName = logoAssetName;
+  }
+
+  return {
+    icons: {
+      logo,
+    },
+  };
+}
+
 function applyDefaults() {
   document.getElementById('tenantId').value = defaultValues.tenantId;
   document.getElementById('tenantSecret').value = defaultValues.tenantSecret;
@@ -77,6 +114,10 @@ function applyDefaults() {
   document.getElementById('templateId').value = defaultValues.templateId;
   document.getElementById('contractParameters').value = defaultValues.contractParameters;
   document.getElementById('enrollExitStep').value = defaultValues.enrollExitStep;
+  document.getElementById('logoMode').value = defaultValues.logoMode;
+  document.getElementById('logoAssetName').value = defaultValues.logoAssetName;
+  document.getElementById('logoRenderingMode').value = defaultValues.logoRenderingMode;
+  document.getElementById('showSponsoredBy').checked = defaultValues.showSponsoredBy;
   document.getElementById('skipTutorial').checked = defaultValues.skipTutorial;
 }
 
@@ -106,10 +147,11 @@ function collectOptions() {
     templateId: document.getElementById('templateId').value,
     contractParameters: document.getElementById('contractParameters').value,
     enrollExitStep: document.getElementById('enrollExitStep').value,
+    enrollTheme: collectEnrollTheme(),
   };
 
   Object.entries(optionalFields).forEach(([key, value]) => {
-    const normalized = normalizeOptionalString(value);
+    const normalized = normalizeOptionalField(value);
     if (normalized !== undefined) {
       options[key] = normalized;
     }

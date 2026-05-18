@@ -270,11 +270,35 @@
               <option value="csoCheck">csoCheck</option>
             </select>
           </div>
+          <div class="field">
+            <label for="logoMode">Logo Mode</label>
+            <select id="logoMode">
+              <option value="defaultLogo" selected>defaultLogo</option>
+              <option value="hidden">hidden</option>
+              <option value="custom">custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="logoAssetName">Logo Asset Name</label>
+            <input id="logoAssetName" value="" />
+          </div>
+          <div class="field">
+            <label for="logoRenderingMode">Logo Rendering Mode</label>
+            <select id="logoRenderingMode">
+              <option value="original" selected>original</option>
+              <option value="template">template</option>
+            </select>
+          </div>
         </div>
 
         <div class="field" style="margin-top: 16px;">
           <label for="contractParameters">Contract Parameters</label>
           <textarea id="contractParameters">contractParameters</textarea>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="showSponsoredBy" type="checkbox" />
+          <label for="showSponsoredBy">Show Sponsored By</label>
         </div>
 
         <div class="checkbox-row">

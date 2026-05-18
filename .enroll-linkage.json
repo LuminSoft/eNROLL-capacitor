@@ -1,0 +1,101 @@
+{
+  "projectName": "enroll-capacitor",
+  "projectType": "capacitor-plugin",
+  "productLine": "enroll",
+  "nativeSdk": {
+    "repo": "/Users/luminsoft/StudioProjects/ekyc-android",
+    "branch": "release/production",
+    "androidArtifact": "com.github.LuminSoft:eNROLL-Android",
+    "androidVersion": "v1.5.24",
+    "iosDistribution": "pod",
+    "iosVersion": "~> 3.0.7",
+    "xcframeworkSource": null
+  },
+  "pluginVersion": "1.0.0",
+  "relatedProjects": [
+    {
+      "name": "enroll_flutter_plugin",
+      "path": "/Users/luminsoft/StudioProjects/enroll_flutter_plugin",
+      "type": "flutter-plugin"
+    },
+    {
+      "name": "enroll-react-native",
+      "path": "/Users/luminsoft/StudioProjects/enroll-react-native",
+      "type": "react-native-plugin"
+    }
+  ],
+  "features": {
+    "nativeAvailable": [
+      "onboarding",
+      "auth",
+      "update",
+      "forgetProfileData",
+      "signContract",
+      "theming",
+      "iconCustomization",
+      "localization",
+      "forcedDocumentType",
+      "exitStep",
+      "correlationId",
+      "skipTutorial",
+      "requestIdTracking",
+      "contractSigning",
+      "callbacks"
+    ],
+    "implementedInFlutter": [
+      "onboarding",
+      "auth",
+      "update",
+      "signContract",
+      "theming",
+      "iconCustomization",
+      "localization",
+      "forcedDocumentType",
+      "exitStep",
+      "correlationId",
+      "skipTutorial",
+      "requestIdTracking",
+      "contractSigning",
+      "callbacks"
+    ],
+    "exposedByThisProject": [
+      "startEnroll",
+      "addListener:onRequestId",
+      "removeAllListeners",
+      "enrollModes:onboarding,auth,update,signContract",
+      "theming",
+      "iconCustomization",
+      "localization:en,ar",
+      "forcedDocumentType",
+      "exitStep",
+      "correlationId",
+      "skipTutorial",
+      "googleApiKey",
+      "requestId",
+      "contractSigning"
+    ],
+    "missingFromThisProject": [
+      "forgetProfileData_mode"
+    ]
+  },
+  "docs": {
+    "files": [
+      "README.md",
+      "CHANGELOG.md",
+      "ENROLL_LINKAGE.md",
+      "docs/api.md",
+      "docs/integration-android.md",
+      "docs/integration-ios.md",
+      "docs/integration-ionic-angular.md"
+    ],
+    "missingDocsForFeatures": [
+      "forgetProfileData"
+    ]
+  },
+  "workflowCommands": {
+    "checkNativeToFlutter": "/check-native-to-flutter",
+    "copyFlutterToSiblingPlugins": "/copy-flutter-to-sibling-plugins",
+    "checkSync": "bash /Users/luminsoft/StudioProjects/ekyc-android/scripts/check-enroll-sync.sh"
+  },
+  "lastVerifiedAt": "2026-05-17T17:06:00Z"
+}

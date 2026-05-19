@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-19
+
+### Added
+
+- Full `enrollTheme` support on iOS — colors and icons now work on both platforms
+- Logo customization with `LogoConfig` (mode, assetName, renderingMode, showSponsoredBy)
+- iOS simulator support in run-example-ios script
+
+### Changed
+
+- Updated Android SDK from v1.5.22 to v1.5.24
+- Updated iOS EnrollFramework pod dependency from ~> 3.0.7 to ~> 3.0.9
+- Removed stale "Android only" documentation for theme features
+- Simplified CI workflow to TypeScript build only
+
 ## [1.0.0] - 2026-04-22
 
 ### Added

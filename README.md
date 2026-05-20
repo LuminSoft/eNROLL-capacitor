@@ -2,21 +2,22 @@
 
 Capacitor plugin for the **eNROLL SDK** — full-featured eKYC identity verification for Ionic and Capacitor mobile apps on Android and iOS.
 
-eNROLL is a compliance solution that prevents identity fraud and phishing. Powered by AI, it reduces errors and speeds up identification, ensuring secure verification. This is the **standard** eNROLL SDK variant with full theme and icon customization on Android and color theming on iOS.
+eNROLL is a compliance solution that prevents identity fraud and phishing. Powered by AI, it reduces errors and speeds up identification, ensuring secure verification. This is the **standard** eNROLL SDK variant with full theme and icon customization on Android and iOS.
 
 > **⚠️ Native mobile only.** This plugin does **not** support browser/web usage. It requires Capacitor running on a physical or emulated Android/iOS device.
 
 Current native SDK versions:
-- **Android:** eNROLL-Android v1.5.22 (via JitPack) + Innovatrics biometrics
-- **iOS:** EnrollFramework ~> 3.0.7 (via CocoaPods)
+- **Android:** eNROLL-Android v1.5.24 (via JitPack) + Innovatrics biometrics
+- **iOS:** EnrollFramework ~> 3.0.9 (via CocoaPods)
 
 ## Requirements
 
 | Platform | Minimum |
 |----------|---------|
-| Capacitor | 6.0+ |
+| Capacitor | 8.0+ |
 | Android minSdk | 24 |
-| Android compileSdk | 34 |
+| Android compileSdk | 36 |
+| Android targetSdk | 36 |
 | iOS deployment target | 13.0 |
 | Kotlin | 2.1.0 |
 | Swift | 5.0 |
@@ -46,6 +47,8 @@ allprojects {
 }
 ```
 
+For projects that manage repositories from `android/settings.gradle`, add the same repositories inside `dependencyResolutionManagement.repositories`.
+
 #### 2. Add Innovatrics License File
 
 Place the `iengine.lic` file (from your Innovatrics/LuminSoft account) at:
@@ -63,6 +66,8 @@ Ensure `minSdkVersion` is at least **24** in `android/variables.gradle`:
 ```gradle
 ext {
     minSdkVersion = 24
+    compileSdkVersion = 36
+    targetSdkVersion = 36
 }
 ```
 
@@ -70,7 +75,7 @@ ext {
 
 #### 1. Configure Podfile
 
-Add the required pod sources and set the deployment target in your `ios/App/Podfile`:
+Add the required pod sources and set the deployment target in your `ios/App/Podfile`. The plugin supports iOS 13.0+, but the example app uses iOS 15.0:
 
 ```ruby
 source 'https://github.com/LuminSoft/eNROLL-iOS-specs.git'
@@ -78,6 +83,7 @@ source 'https://github.com/innovatrics/innovatrics-podspecs.git'
 source 'https://github.com/CocoaPods/Specs.git'
 
 platform :ios, '15.0'
+use_frameworks! :linkage => :static
 ```
 
 #### 2. Add Innovatrics License File
@@ -128,7 +134,7 @@ Then enable **Near Field Communication Tag Reading** in Xcode → Target → Sig
 
 ## Usage
 
-### Basic Example (Ionic/Angular)
+### Basic Example
 
 ```typescript
 import { Enroll } from 'enroll-capacitor';
@@ -151,8 +157,8 @@ try {
 
   console.log('Success! Applicant ID:', result.applicantId);
   console.log('Exit step completed:', result.exitStepCompleted);
-} catch (error) {
-  console.error('Enrollment failed:', error);
+} catch (error: any) {
+  console.error('Enrollment failed:', error?.data ?? error);
 } finally {
   await listener.remove();
 }
@@ -167,6 +173,17 @@ const result = await Enroll.startEnroll({
   enrollMode: 'auth',
   applicationId: 'APPLICATION_ID',
   levelOfTrust: 'LEVEL_OF_TRUST_TOKEN',
+});
+```
+
+### Update Mode
+
+```typescript
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'update',
+  applicationId: 'APPLICATION_ID',
 });
 ```
 
@@ -192,6 +209,25 @@ const result = await Enroll.startEnroll({
 | `auth` | Authenticate existing user | + `applicationId`, `levelOfTrust` |
 | `update` | Re-verify / update user | + `applicationId` |
 | `signContract` | Sign contract templates | + `templateId` |
+
+## Request ID and Resume
+
+The SDK can emit a `requestId` while the flow is still running. Store it on your backend if you need to resume an interrupted enrollment later.
+
+```typescript
+const listener = await Enroll.addListener('onRequestId', ({ requestId }) => {
+  // Send requestId to your backend and link it to your user/session.
+});
+
+await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'onboarding',
+  requestId: 'PREVIOUS_REQUEST_ID',
+});
+
+await listener.remove();
+```
 
 ## Configuration Options
 
@@ -293,6 +329,48 @@ Used with `enrollExitStep` to terminate the flow after a specific step:
 | Icon customization | ✅ | ✅ |
 | Biometric SDK (Innovatrics) | ✅ | ✅ |
 | Simulator support | ✅ (emulator) | ❌ (device only) |
+
+## Troubleshooting
+
+### Web Preview Error
+
+This plugin is native-only. Running in a browser, Ionic serve, or Vite preview will throw an unavailable error. Use:
+
+```bash
+npx cap run android
+npx cap run ios
+```
+
+### Missing License File
+
+If document scanning, face liveness, or NFC fails at runtime, verify that `iengine.lic` is present in the correct native app target:
+
+- Android: `android/app/src/main/res/raw/iengine.lic`
+- iOS: `ios/App/App/iengine.lic` and added to the Xcode App target
+
+### FLOW_IN_PROGRESS
+
+`FLOW_IN_PROGRESS` means `startEnroll` was called while another enrollment flow is already open. Disable the launch button until the returned promise resolves or rejects.
+
+### INVALID_ARGUMENT
+
+Check the required fields for the selected mode:
+
+- `onboarding`: `tenantId`, `tenantSecret`
+- `auth`: `tenantId`, `tenantSecret`, `applicationId`, `levelOfTrust`
+- `update`: `tenantId`, `tenantSecret`, `applicationId`
+- `signContract`: `tenantId`, `tenantSecret`, `templateId`
+
+### iOS Pod Install or Build Issues
+
+Confirm that the Podfile includes the three required pod sources, `platform :ios, '15.0'`, and `use_frameworks! :linkage => :static`. Then run:
+
+```bash
+cd ios/App
+pod install
+```
+
+Build and test on a physical iOS device.
 
 ## Security Notes
 

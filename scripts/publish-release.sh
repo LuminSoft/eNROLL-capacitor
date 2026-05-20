@@ -80,6 +80,7 @@ search_review_patterns() {
       -g '!.derived-data/**' \
       -g '!ios/Frameworks/**' \
       -g '!example-app/ios/**' \
+      -g '!ENROLL_LINKAGE.md' \
       -g '!scripts/publish-release.sh' \
       -g '!docs/release.md' \
       -g '!docs/publish-checklist.md' \
@@ -91,6 +92,7 @@ search_review_patterns() {
       --exclude-dir=dist \
       --exclude-dir=.derived-data \
       --exclude-dir=Frameworks \
+      --exclude=ENROLL_LINKAGE.md \
       --exclude=publish-release.sh \
       --exclude=release.md \
       --exclude=publish-checklist.md >"$output_file"

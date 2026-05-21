@@ -229,6 +229,60 @@ await Enroll.startEnroll({
 await listener.remove();
 ```
 
+## Exit Step / Partial Flow
+
+Use `enrollExitStep` when your app needs to stop the SDK after a specific onboarding step and return control to the Ionic/Capacitor app.
+
+If `enrollExitStep` is not provided, the SDK runs the full flow configured for the tenant. This is the same as selecting **None (Full Flow)** in the Android sample app.
+
+```typescript
+const listener = await Enroll.addListener('onRequestId', ({ requestId }) => {
+  // Persist this requestId if you want to resume the flow later.
+});
+
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'onboarding',
+  enrollExitStep: 'personalConfirmation',
+});
+
+if (result.exitStepCompleted) {
+  console.log('Stopped after:', result.completedStepName);
+  console.log('Resume with requestId:', result.requestId);
+}
+
+await listener.remove();
+```
+
+When the configured exit step is completed successfully:
+
+- the native SDK closes and resolves the `startEnroll` promise
+- `exitStepCompleted` is `true`
+- `completedStepName` contains the completed native step name
+- `requestId` can be stored and passed again later to resume the same enrollment request
+
+If the configured step is not part of the tenant's backend flow, the SDK continues according to the configured flow. Use only steps enabled for the selected tenant and enrollment mode.
+
+### Exit Step Values
+
+| TypeScript value | Native Android step | Description |
+|------------------|---------------------|-------------|
+| no value / `undefined` | `null` | Run the full flow |
+| `personalConfirmation` | `EkycStepType.PersonalConfirmation` | Stop after ID/passport personal confirmation |
+| `smileLiveness` | `EkycStepType.SmileLiveness` | Stop after face liveness |
+| `phoneOtp` | `EkycStepType.PhoneOtp` | Stop after phone OTP verification |
+| `emailOtp` | `EkycStepType.EmailOtp` | Stop after email OTP verification |
+| `saveMobileDevice` | `EkycStepType.SaveMobileDevice` | Stop after saving the mobile device |
+| `deviceLocation` | `EkycStepType.DeviceLocation` | Stop after device location |
+| `securityQuestions` | `EkycStepType.SecurityQuestions` | Stop after security questions |
+| `password` | `EkycStepType.SettingPassword` | Stop after password setup |
+| `amlCheck` | `EkycStepType.AmlCheck` | Stop after AML check |
+| `ntraCheck` | `EkycStepType.NtraCheck` | Stop after NTRA check |
+| `csoCheck` | `EkycStepType.CsoCheck` | Stop after CSO check |
+| `termsAndConditions` | `EkycStepType.TermsConditions` | Stop after terms and conditions |
+| `electronicSignature` | `EkycStepType.ElectronicSignature` | Stop after electronic signature |
+
 ## Configuration Options
 
 | Key | Type | Required | Default | Description |
@@ -312,12 +366,6 @@ await Enroll.startEnroll({
 Available icon groups: `logo`, `location`, `nationalId`, `passport`, `phone`, `email`, `faceMatching`, `securityQuestions`, `password`, `signature`, `common`, `update`, `forget`.
 
 See `EnrollIcons` in `src/definitions.ts` for the full type reference.
-
-## Enrollment Step Types
-
-Used with `enrollExitStep` to terminate the flow after a specific step:
-
-`phoneOtp` · `personalConfirmation` · `smileLiveness` · `emailOtp` · `saveMobileDevice` · `deviceLocation` · `password` · `securityQuestions` · `amlCheck` · `termsAndConditions` · `electronicSignature` · `ntraCheck` · `csoCheck`
 
 ---
 

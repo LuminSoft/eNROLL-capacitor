@@ -6,12 +6,12 @@
     "repo": "/Users/luminsoft/StudioProjects/ekyc-android",
     "branch": "release/production",
     "androidArtifact": "com.github.LuminSoft:eNROLL-Android",
-    "androidVersion": "v1.5.24",
+    "androidVersion": "v1.5.28",
     "iosDistribution": "pod",
-    "iosVersion": "~> 3.0.9",
+    "iosVersion": "~> 3.0.13",
     "xcframeworkSource": null
   },
-  "pluginVersion": "1.0.0",
+  "pluginVersion": "1.2.0",
   "relatedProjects": [
     {
       "name": "enroll_flutter_plugin",
@@ -65,6 +65,7 @@
       "enrollModes:onboarding,auth,update,signContract",
       "theming",
       "iconCustomization",
+      "typography",
       "localization:en,ar",
       "forcedDocumentType",
       "exitStep",
@@ -72,7 +73,8 @@
       "skipTutorial",
       "googleApiKey",
       "requestId",
-      "contractSigning"
+      "contractSigning",
+      "signContractFile"
     ],
     "missingFromThisProject": [
       "forgetProfileData_mode"
@@ -95,5 +97,5 @@
     "copyFlutterToSiblingPlugins": "/copy-flutter-to-sibling-plugins",
     "checkSync": "bash /Users/luminsoft/StudioProjects/ekyc-android/scripts/check-enroll-sync.sh"
   },
-  "lastVerifiedAt": "2026-05-18T11:14:00Z"
+  "lastVerifiedAt": "2026-07-14T10:36:00Z"
 }

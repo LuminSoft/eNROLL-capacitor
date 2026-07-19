@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-14
+
+### Added
+
+- **Sign Contract dual-mode support** (Android + iOS):
+  - **Contract Template mode** — use `templateId` + `contractParameters` for server-side template generation
+  - **PDF File mode** — use `signContractFile` (Base64-encoded PDF) + optional `contractFileName`
+  - `templateId` is now only required when `signContractFile` is not provided
+- **Typography support** via `enrollTheme.typography` (Android + iOS):
+  - `fontFamily` — custom font identifier (`res/font` name on Android, PostScript name on iOS)
+  - `dynamicTypeEnabled` — platform font scaling toggle
+  - `sizes` — preset font size (`'default'` | `'medium'` | `'large'`)
+  - `localizationOverrides` — JSON-file based localization overrides per language
+- New TypeScript types: `EnrollTypography`, `EnrollFontSizes`, `EnrollLocalizationOverrides`
+- Example app: font type dropdown (4 bundled fonts), font size dropdown, localization override toggle
+- Example app: conditional sign contract UI matching native demo (template vs PDF picker)
+- Example app: bundled `enroll_localizations_en.json` and `enroll_localizations_ar.json` for Android and iOS
+
+### Changed
+
+- Updated Android SDK from v1.5.24 to v1.5.28 (adds `EnrollTypography`, `EnrollFontSize`, `EnrollLocalizationOverrides`, `signContractFile`, `contractFileName`)
+- Updated iOS EnrollFramework pod from ~> 3.0.9 to ~> 3.0.13 (adds typography support)
+- Sign contract validation is now conditional: requires `templateId` OR `signContractFile` (not both)
+
 ## [1.1.2] - 2026-05-21
 
 ### Changed

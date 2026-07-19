@@ -1,5 +1,6 @@
 package com.luminsoft.enroll.capacitor
 
+import android.util.Base64
 import android.util.Log
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -39,6 +40,9 @@ import com.luminsoft.enroll_sdk.ui_components.theme.SignatureIcons
 import com.luminsoft.enroll_sdk.ui_components.theme.StepIcon
 import com.luminsoft.enroll_sdk.ui_components.theme.UiIcons
 import com.luminsoft.enroll_sdk.ui_components.theme.UpdateIcons
+import com.luminsoft.enroll_sdk.ui_components.theme.EnrollFontSize
+import com.luminsoft.enroll_sdk.ui_components.theme.EnrollLocalizationOverrides
+import com.luminsoft.enroll_sdk.ui_components.theme.EnrollTypography
 import androidx.compose.ui.graphics.Color
 import org.json.JSONObject
 
@@ -112,8 +116,9 @@ class EnrollPlugin : Plugin() {
         }
 
         if (enrollMode == EnrollMode.SIGN_CONTRACT) {
-            if (templateId.isEmpty()) {
-                call.reject("templateId is required for signContract mode", "INVALID_ARGUMENT")
+            val hasSignContractFile = call.getString("signContractFile")?.isNotBlank() == true
+            if (!hasSignContractFile && templateId.isEmpty()) {
+                call.reject("templateId is required for signContract mode (contract template)", "INVALID_ARGUMENT")
                 return
             }
         }
@@ -128,6 +133,10 @@ class EnrollPlugin : Plugin() {
         val contractParameters = call.getString("contractParameters") ?: ""
         val enrollForcedDocumentType = parseEnrollForcedDocumentType(call.getString("enrollForcedDocumentType"))
         val exitStep = parseExitStep(call.getString("enrollExitStep"))
+        val contractFileName = call.getString("contractFileName")?.takeIf { it.isNotBlank() }
+        val signContractFileBytes = call.getString("signContractFile")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { Base64.decode(it, Base64.DEFAULT) }
 
         // ---- Theme (colors + icons) ----
         val defaultAppColors = AppColors(
@@ -161,9 +170,18 @@ class EnrollPlugin : Plugin() {
             AppIcons()
         }
 
+        // Typography from enrollTheme.typography
+        val typography = if (themeJson != null && themeJson.has("typography")) {
+            val typographyJson = JSONObject(themeJson.getJSONObject("typography").toString())
+            parseEnrollTypography(typographyJson)
+        } else {
+            null
+        }
+
         val appTheme = AppTheme(
             colors = appColors,
-            icons = appIcons
+            icons = appIcons,
+            typography = typography
         )
 
         // ---- Launch the SDK ----
@@ -223,6 +241,8 @@ class EnrollPlugin : Plugin() {
                 requestId = requestId,
                 templateId = templateId,
                 contractParameters = contractParameters,
+                signContractFile = signContractFileBytes,
+                contractFileName = contractFileName,
                 exitStep = exitStep
             )
 
@@ -512,4 +532,40 @@ class EnrollPlugin : Plugin() {
         securityQuestions = json.optJSONObject("securityQuestions")?.let { parseStepIcon(it) },
         password = json.optJSONObject("password")?.let { parseStepIcon(it) },
     )
+
+    // ------------------------------------------------------------------
+    // Typography parsing
+    // ------------------------------------------------------------------
+
+    private fun parseEnrollTypography(json: JSONObject): EnrollTypography {
+        return EnrollTypography(
+            fontFamily = json.optString("fontFamily", "").takeIf { it.isNotBlank() },
+            dynamicTypeEnabled = json.optBoolean("dynamicTypeEnabled", true),
+            fontSize = parseEnrollFontSize(json.optString("sizes", "default")),
+            localizationOverrides = json.optJSONObject("localizationOverrides")
+                ?.let { parseEnrollLocalizationOverrides(it) }
+        )
+    }
+
+    private fun parseEnrollFontSize(size: String): EnrollFontSize {
+        return when (size.lowercase()) {
+            "medium" -> EnrollFontSize.MEDIUM
+            "large" -> EnrollFontSize.LARGE
+            else -> EnrollFontSize.SMALL
+        }
+    }
+
+    private fun parseEnrollLocalizationOverrides(json: JSONObject): EnrollLocalizationOverrides? {
+        val englishFileName = json.optString("englishFileName", "").takeIf { it.isNotBlank() }
+        val arabicFileName = json.optString("arabicFileName", "").takeIf { it.isNotBlank() }
+
+        return if (englishFileName != null || arabicFileName != null) {
+            EnrollLocalizationOverrides(
+                englishFileName = englishFileName,
+                arabicFileName = arabicFileName
+            )
+        } else {
+            null
+        }
+    }
 }

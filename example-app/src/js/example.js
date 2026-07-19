@@ -1,8 +1,8 @@
 import { Enroll } from 'enroll-capacitor';
 
 const defaultValues = {
-  tenantId: 'YOUR_TENANT_ID',
-  tenantSecret: 'YOUR_TENANT_SECRET',
+  tenantId: '3bab5a01-b3e2-4900-890c-d5fc6990e610',
+  tenantSecret: 'e84e5d36-ede2-42a6-abba-ae01a9b773fc',
   requestId: '',
   enrollMode: 'onboarding',
   enrollEnvironment: 'staging',
@@ -18,27 +18,11 @@ const defaultValues = {
   logoMode: 'custom',
   logoAssetName: 'enroll_test_logo',
   logoRenderingMode: 'original',
+  fontFamily: '',
+  fontSizes: 'default',
+  dynamicTypeEnabled: true,
+  useLocalizationOverrides: false,
 };
-
-const fieldIds = [
-  'tenantId',
-  'tenantSecret',
-  'requestId',
-  'enrollMode',
-  'enrollEnvironment',
-  'localizationCode',
-  'applicationId',
-  'levelOfTrust',
-  'googleApiKey',
-  'correlationId',
-  'templateId',
-  'contractParameters',
-  'enrollExitStep',
-  'logoMode',
-  'logoAssetName',
-  'logoRenderingMode',
-  'skipTutorial',
-];
 
 const elements = {
   startButton: document.getElementById('startEnrollButton'),
@@ -49,10 +33,6 @@ const elements = {
   successResult: document.getElementById('successResult'),
   errorResult: document.getElementById('errorResult'),
 };
-
-function getInputValue(id) {
-  return document.getElementById(id);
-}
 
 function setStatus(message, kind = 'info') {
   elements.statusBox.textContent = message;
@@ -65,6 +45,7 @@ function setPrettyJson(target, value) {
 }
 
 function normalizeOptionalString(value) {
+  if (!value) return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
@@ -73,9 +54,81 @@ function normalizeOptionalField(value) {
   if (typeof value === 'string') {
     return normalizeOptionalString(value);
   }
-
   return value;
 }
+
+// --- Sign Contract Mode UI toggling ---
+
+function isSignContractMode() {
+  return document.getElementById('enrollMode').value === 'signContract';
+}
+
+function getSignContractMode() {
+  return document.getElementById('signContractMode').value;
+}
+
+function updateSignContractVisibility() {
+  const signContractSection = document.getElementById('signContractSection');
+  const normalContractFields = document.getElementById('normalContractFields');
+
+  if (isSignContractMode()) {
+    signContractSection.style.display = 'block';
+    normalContractFields.style.display = 'none';
+  } else {
+    signContractSection.style.display = 'none';
+    normalContractFields.style.display = 'block';
+  }
+}
+
+function updateSignContractModeFields() {
+  const templateFields = document.getElementById('templateModeFields');
+  const pdfFields = document.getElementById('pdfModeFields');
+
+  if (getSignContractMode() === 'template') {
+    templateFields.style.display = 'block';
+    pdfFields.style.display = 'none';
+  } else {
+    templateFields.style.display = 'none';
+    pdfFields.style.display = 'block';
+  }
+}
+
+// --- PDF File Picker ---
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePdfFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    document.getElementById('signContractFile').value = '';
+    document.getElementById('contractFileName').value = '';
+    document.getElementById('pdfFileName').textContent = '';
+    return;
+  }
+
+  document.getElementById('contractFileName').value = file.name;
+  document.getElementById('pdfFileName').textContent = `Selected: ${file.name}`;
+
+  try {
+    const base64 = await readFileAsBase64(file);
+    document.getElementById('signContractFile').value = base64;
+  } catch (err) {
+    document.getElementById('pdfFileName').textContent = 'Error reading file';
+    document.getElementById('signContractFile').value = '';
+  }
+}
+
+// --- Theme ---
 
 function collectEnrollTheme() {
   const logoMode = document.getElementById('logoMode').value;
@@ -90,12 +143,40 @@ function collectEnrollTheme() {
     logo.assetName = logoAssetName;
   }
 
-  return {
+  const theme = {
     icons: {
       logo,
     },
   };
+
+  // Typography
+  const fontFamilyValue = document.getElementById('fontFamily').value;
+  const fontFamily = fontFamilyValue && fontFamilyValue.length > 0 ? fontFamilyValue : undefined;
+  const dynamicTypeEnabled = document.getElementById('dynamicTypeEnabled').checked;
+  const sizes = document.getElementById('fontSizes').value;
+  const useOverrides = document.getElementById('useLocalizationOverrides').checked;
+
+  if (fontFamily || sizes !== 'default' || !dynamicTypeEnabled || useOverrides) {
+    const typography = {
+      dynamicTypeEnabled,
+      sizes,
+    };
+    if (fontFamily) {
+      typography.fontFamily = fontFamily;
+    }
+    if (useOverrides) {
+      typography.localizationOverrides = {
+        englishFileName: 'enroll_localizations_en',
+        arabicFileName: 'enroll_localizations_ar',
+      };
+    }
+    theme.typography = typography;
+  }
+
+  return theme;
 }
+
+// --- Defaults ---
 
 function applyDefaults() {
   document.getElementById('tenantId').value = defaultValues.tenantId;
@@ -108,13 +189,31 @@ function applyDefaults() {
   document.getElementById('levelOfTrust').value = defaultValues.levelOfTrust;
   document.getElementById('googleApiKey').value = defaultValues.googleApiKey;
   document.getElementById('correlationId').value = defaultValues.correlationId;
-  document.getElementById('templateId').value = defaultValues.templateId;
-  document.getElementById('contractParameters').value = defaultValues.contractParameters;
   document.getElementById('enrollExitStep').value = defaultValues.enrollExitStep;
   document.getElementById('logoMode').value = defaultValues.logoMode;
   document.getElementById('logoAssetName').value = defaultValues.logoAssetName;
   document.getElementById('logoRenderingMode').value = defaultValues.logoRenderingMode;
   document.getElementById('skipTutorial').checked = defaultValues.skipTutorial;
+  document.getElementById('fontFamily').value = defaultValues.fontFamily;
+  document.getElementById('fontSizes').value = defaultValues.fontSizes;
+  document.getElementById('dynamicTypeEnabled').checked = defaultValues.dynamicTypeEnabled;
+  document.getElementById('useLocalizationOverrides').checked = defaultValues.useLocalizationOverrides;
+
+  // Sign contract fields
+  document.getElementById('signContractMode').value = 'template';
+  document.getElementById('templateId').value = defaultValues.templateId;
+  document.getElementById('contractParameters').value = defaultValues.contractParameters;
+  document.getElementById('signContractFile').value = '';
+  document.getElementById('contractFileName').value = '';
+  document.getElementById('pdfFileName').textContent = '';
+  document.getElementById('pdfFileInput').value = '';
+
+  // Normal mode fields
+  document.getElementById('templateIdNormal').value = defaultValues.templateId;
+  document.getElementById('contractParametersNormal').value = defaultValues.contractParameters;
+
+  updateSignContractVisibility();
+  updateSignContractModeFields();
 }
 
 function clearResults() {
@@ -124,11 +223,14 @@ function clearResults() {
   elements.errorResult.textContent = 'No error result yet.';
 }
 
+// --- Collect Options ---
+
 function collectOptions() {
+  const enrollMode = document.getElementById('enrollMode').value;
   const options = {
     tenantId: document.getElementById('tenantId').value.trim(),
     tenantSecret: document.getElementById('tenantSecret').value.trim(),
-    enrollMode: document.getElementById('enrollMode').value,
+    enrollMode,
     enrollEnvironment: document.getElementById('enrollEnvironment').value,
     localizationCode: document.getElementById('localizationCode').value,
     skipTutorial: document.getElementById('skipTutorial').checked,
@@ -140,11 +242,24 @@ function collectOptions() {
     requestId: document.getElementById('requestId').value,
     googleApiKey: document.getElementById('googleApiKey').value,
     correlationId: document.getElementById('correlationId').value,
-    templateId: document.getElementById('templateId').value,
-    contractParameters: document.getElementById('contractParameters').value,
     enrollExitStep: document.getElementById('enrollExitStep').value,
     enrollTheme: collectEnrollTheme(),
   };
+
+  // Collect templateId / contractParameters / signContractFile based on mode
+  if (enrollMode === 'signContract') {
+    const signContractMode = getSignContractMode();
+    if (signContractMode === 'template') {
+      optionalFields.templateId = document.getElementById('templateId').value;
+      optionalFields.contractParameters = document.getElementById('contractParameters').value;
+    } else {
+      optionalFields.signContractFile = document.getElementById('signContractFile').value;
+      optionalFields.contractFileName = document.getElementById('contractFileName').value;
+    }
+  } else {
+    optionalFields.templateId = document.getElementById('templateIdNormal').value;
+    optionalFields.contractParameters = document.getElementById('contractParametersNormal').value;
+  }
 
   Object.entries(optionalFields).forEach(([key, value]) => {
     const normalized = normalizeOptionalField(value);
@@ -156,8 +271,33 @@ function collectOptions() {
   return options;
 }
 
+// --- Launch ---
+
 async function startEnroll() {
   clearResults();
+
+  // Validation for sign contract mode
+  if (isSignContractMode()) {
+    const appId = document.getElementById('applicationId').value.trim();
+    if (!appId || appId === 'APPLICATION_ID') {
+      setStatus('Application ID is required for sign contract', 'error');
+      return;
+    }
+    if (getSignContractMode() === 'template') {
+      const templateId = document.getElementById('templateId').value.trim();
+      if (!templateId) {
+        setStatus('Template ID is required for contract template mode', 'error');
+        return;
+      }
+    } else {
+      const signContractFile = document.getElementById('signContractFile').value;
+      if (!signContractFile) {
+        setStatus('PDF file is required for PDF sign contract mode', 'error');
+        return;
+      }
+    }
+  }
+
   setStatus('Launching eNROLL...', 'info');
   elements.startButton.disabled = true;
 
@@ -197,13 +337,6 @@ async function setupRequestIdListener() {
   }
 }
 
-function validateMarkup() {
-  const missingIds = fieldIds.filter((id) => !getInputValue(id));
-  if (missingIds.length > 0) {
-    throw new Error(`Missing form elements: ${missingIds.join(', ')}`);
-  }
-}
-
 function bindActions() {
   elements.startButton.addEventListener('click', startEnroll);
   elements.resetButton.addEventListener('click', () => {
@@ -211,10 +344,25 @@ function bindActions() {
     clearResults();
   });
   elements.clearButton.addEventListener('click', clearResults);
+
+  // Mode switching
+  document.getElementById('enrollMode').addEventListener('change', updateSignContractVisibility);
+  document.getElementById('signContractMode').addEventListener('change', () => {
+    updateSignContractModeFields();
+    // Clear PDF state when switching to template
+    if (getSignContractMode() === 'template') {
+      document.getElementById('signContractFile').value = '';
+      document.getElementById('contractFileName').value = '';
+      document.getElementById('pdfFileName').textContent = '';
+      document.getElementById('pdfFileInput').value = '';
+    }
+  });
+
+  // PDF file picker
+  document.getElementById('pdfFileInput').addEventListener('change', handlePdfFileSelected);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  validateMarkup();
   applyDefaults();
   clearResults();
   bindActions();

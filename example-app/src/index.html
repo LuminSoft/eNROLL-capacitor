@@ -248,10 +248,6 @@
             <input id="correlationId" value="correlationIdTest" />
           </div>
           <div class="field">
-            <label for="templateId">Template ID</label>
-            <input id="templateId" value="templateId" />
-          </div>
-          <div class="field">
             <label for="enrollExitStep">Exit Step</label>
             <select id="enrollExitStep">
               <option value="">none</option>
@@ -289,11 +285,73 @@
               <option value="template">template</option>
             </select>
           </div>
+          <div class="field">
+            <label for="fontFamily">Font Type</label>
+            <select id="fontFamily">
+              <option value="" selected>Default (SDK font)</option>
+              <option value="itim_regular">Itim - Handwritten (English)</option>
+              <option value="merriweather_variable">Merriweather - Serif (English)</option>
+              <option value="amiri_regular">Amiri - Naskh (Arabic)</option>
+              <option value="reem_kufi_variable">Reem Kufi - Kufi (Arabic)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fontSizes">Font Size</label>
+            <select id="fontSizes">
+              <option value="default" selected>Small (default)</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
         </div>
 
-        <div class="field" style="margin-top: 16px;">
-          <label for="contractParameters">Contract Parameters</label>
-          <textarea id="contractParameters">contractParameters</textarea>
+        <!-- Sign Contract Section (visible only when enrollMode = signContract) -->
+        <div id="signContractSection" style="display: none; margin-top: 16px; padding: 16px; background: #f0f4fa; border-radius: 12px; border: 1px solid var(--border);">
+          <h3 style="margin: 0 0 12px; font-size: 16px;">Sign Contract Options</h3>
+          <div class="field">
+            <label for="signContractMode">Sign Contract Mode</label>
+            <select id="signContractMode">
+              <option value="template" selected>Contract Template</option>
+              <option value="pdf">PDF File</option>
+            </select>
+          </div>
+
+          <!-- Template mode fields -->
+          <div id="templateModeFields" style="margin-top: 12px;">
+            <div class="field">
+              <label for="templateId">Template ID</label>
+              <input id="templateId" value="templateId" />
+            </div>
+            <div class="field" style="margin-top: 12px;">
+              <label for="contractParameters">Contract Parameters</label>
+              <textarea id="contractParameters">contractParameters</textarea>
+            </div>
+          </div>
+
+          <!-- PDF mode fields -->
+          <div id="pdfModeFields" style="display: none; margin-top: 12px;">
+            <div class="field">
+              <label for="pdfFileInput">Pick PDF File</label>
+              <input id="pdfFileInput" type="file" accept="application/pdf" style="padding: 8px;" />
+            </div>
+            <div id="pdfFileName" style="margin-top: 8px; font-size: 13px; color: var(--muted);"></div>
+            <input type="hidden" id="signContractFile" value="" />
+            <input type="hidden" id="contractFileName" value="" />
+          </div>
+        </div>
+
+        <!-- Template ID / Contract Params for non-signContract modes -->
+        <div id="normalContractFields" style="margin-top: 16px;">
+          <div class="grid">
+            <div class="field">
+              <label for="templateIdNormal">Template ID</label>
+              <input id="templateIdNormal" value="templateId" />
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="contractParametersNormal">Contract Parameters</label>
+            <textarea id="contractParametersNormal">contractParameters</textarea>
+          </div>
         </div>
 
         <div class="checkbox-row">
@@ -304,6 +362,16 @@
         <div class="checkbox-row">
           <input id="skipTutorial" type="checkbox" />
           <label for="skipTutorial">Skip Tutorial</label>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="dynamicTypeEnabled" type="checkbox" checked />
+          <label for="dynamicTypeEnabled">Dynamic Type (font scaling)</label>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="useLocalizationOverrides" type="checkbox" />
+          <label for="useLocalizationOverrides">Use Localization Overrides (en/ar JSON files)</label>
         </div>
 
         <div class="actions">

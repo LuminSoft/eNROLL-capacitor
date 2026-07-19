@@ -307,25 +307,68 @@ export interface EnrollIcons {
 }
 
 // ---------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------
+
+/**
+ * Predefined font-size presets supported by the native SDKs.
+ * - `'default'` — standard font sizes
+ * - `'medium'`  — slightly larger
+ * - `'large'`   — largest preset
+ */
+export type EnrollFontSizes = 'default' | 'medium' | 'large';
+
+/**
+ * Localization overrides loaded from JSON files bundled with the host app.
+ * On iOS the files are resolved from `Bundle.main`. On Android from app assets.
+ * No extension is required; `.json` is assumed when not provided.
+ */
+export interface EnrollLocalizationOverrides {
+  /** File name (without `.json`) for English overrides. */
+  englishFileName?: string;
+  /** File name (without `.json`) for Arabic overrides. */
+  arabicFileName?: string;
+}
+
+/**
+ * Typography configuration for the eNROLL SDK.
+ *
+ * On iOS, `fontFamily` is the PostScript/family name registered in `Info.plist`.
+ * On Android, `fontFamily` is the font resource name in `res/font` without extension.
+ */
+export interface EnrollTypography {
+  /** Custom font identifier. When omitted the native SDK default font is used. */
+  fontFamily?: string;
+  /** Whether the SDK should scale fonts using the platform font scale. Defaults to `true`. */
+  dynamicTypeEnabled?: boolean;
+  /** Font-size preset. Defaults to `'default'`. */
+  sizes?: EnrollFontSizes;
+  /** Optional JSON-file based localization overrides. */
+  localizationOverrides?: EnrollLocalizationOverrides;
+}
+
+// ---------------------------------------------------------------------------
 // Theme
 // ---------------------------------------------------------------------------
 
 /**
  * Unified theme configuration for the eNROLL SDK.
  *
- * Groups color and icon customization under a single concept,
+ * Groups color, icon, and typography customization under a single concept,
  * aligned with the Android SDK's `AppTheme` structure.
  *
  * If both `enrollTheme` and `appColors` are provided on {@link StartEnrollOptions},
  * `enrollTheme` takes priority and `appColors` is ignored.
  *
- * Both colors and icons are supported on **Android and iOS**.
+ * Colors, icons, and typography are supported on **Android and iOS**.
  */
 export interface EnrollTheme {
   /** Color customization for the SDK UI. Works on Android and iOS. */
   colors?: EnrollColors;
   /** Icon customization for logo and step illustrations. Works on Android and iOS. */
   icons?: EnrollIcons;
+  /** Typography customization (font family, sizes, dynamic type). Works on Android and iOS. */
+  typography?: EnrollTypography;
 }
 
 // ---------------------------------------------------------------------------
@@ -380,6 +423,15 @@ export interface StartEnrollOptions {
 
   /** Extra contract parameters (JSON string) for `signContract` mode. */
   contractParameters?: string;
+
+  /**
+   * Base64-encoded PDF file for the sign contract step.
+   * Provide the binary contents of a PDF document encoded as a Base64 string.
+   */
+  signContractFile?: string;
+
+  /** Optional filename for the contract PDF. If omitted, the native SDK generates a timestamp filename. */
+  contractFileName?: string;
 
   /**
    * Unified theme configuration (colors + icons).

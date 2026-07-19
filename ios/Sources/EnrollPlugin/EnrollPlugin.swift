@@ -80,6 +80,11 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         let enrollForcedDocumentType = parseEnrollForcedDocumentType(call.getString("enrollForcedDocumentType"))
         let exitStep = parseExitStep(call.getString("enrollExitStep"))
         let contractTemplateId = Int(templateId)
+        let contractFileName = call.getString("contractFileName")
+        let signContractFile: Data? = {
+            guard let base64Str = call.getString("signContractFile"), !base64Str.isEmpty else { return nil }
+            return Data(base64Encoded: base64Str)
+        }()
 
         // ---- Colors: enrollTheme.colors > appColors ----
         let enrollColors: EnrollColors? = {
@@ -91,11 +96,24 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             return generateDynamicColors(colors: colorsObj)
         }()
 
-        // ---- Theme (colors + icons) ----
-        let enrollTheme: EnrollTheme? = {
+        // ---- Theme (colors + icons + typography) ----
+        var enrollTheme: EnrollTheme? = {
             guard let themeObj = call.getObject("enrollTheme") else { return nil }
             return self.generateDynamicTheme(theme: themeObj)
         }()
+
+        // Parse typography from enrollTheme
+        if let themeObj = call.getObject("enrollTheme"),
+           let typographyDict = themeObj["typography"] as? [String: Any] {
+            let parsedTypography = generateDynamicTypography(typographyDict)
+            if enrollTheme == nil {
+                enrollTheme = EnrollTheme()
+            }
+            enrollTheme?.typography = parsedTypography
+        }
+
+        // Apply typography to the shared EnrollThemeManager
+        EnrollThemeManager.shared.configure(enrollTheme)
 
         // ---- RTL layout for Arabic ----
         configureLayoutDirection(localizationCode)
@@ -132,6 +150,8 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
                     requestId: requestId.isEmpty ? nil : requestId,
                     contractTemplateId: contractTemplateId,
                     signContarctParam: contractParameters.isEmpty ? nil : contractParameters,
+                    signContarctFile: signContractFile,
+                    signContarctFileName: contractFileName,
                     exitStep: exitStep
                 )
 
@@ -351,6 +371,47 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         }
 
         return EnrollTheme(icons: appIcons, colors: enrollColors)
+    }
+
+    // ------------------------------------------------------------------
+    // MARK: - Typography parsing
+    // ------------------------------------------------------------------
+
+    private func generateDynamicTypography(_ dict: [String: Any]) -> EnrollTypography {
+        let fontFamily = dict["fontFamily"] as? String
+        let dynamicTypeEnabled = dict["dynamicTypeEnabled"] as? Bool ?? true
+
+        var sizes = EnrollFontSizes(size: .default)
+        if let sizeName = dict["sizes"] as? String {
+            switch sizeName.lowercased() {
+            case "medium":
+                sizes = EnrollFontSizes(size: .medium)
+            case "large":
+                sizes = EnrollFontSizes(size: .large)
+            default:
+                sizes = EnrollFontSizes(size: .default)
+            }
+        }
+
+        var localizationOverrides: EnrollLocalizationOverrides?
+        if let overridesDict = dict["localizationOverrides"] as? [String: Any] {
+            let englishFileName = overridesDict["englishFileName"] as? String
+            let arabicFileName = overridesDict["arabicFileName"] as? String
+            if englishFileName != nil || arabicFileName != nil {
+                localizationOverrides = EnrollLocalizationOverrides(
+                    englishFileName: englishFileName,
+                    arabicFileName: arabicFileName,
+                    bundle: .main
+                )
+            }
+        }
+
+        return EnrollTypography(
+            fontFamily: fontFamily,
+            dynamicTypeEnabled: dynamicTypeEnabled,
+            sizes: sizes,
+            localizationOverrides: localizationOverrides
+        )
     }
 
     private func generateAppIcons(from dictionary: [String: Any]) -> AppIcons {

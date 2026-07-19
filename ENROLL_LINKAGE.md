@@ -14,11 +14,9 @@
 |---|---|
 | Branch | `release/production` |
 | Artifact | `com.github.LuminSoft:eNROLL-Android` |
-| Current Version | `v1.5.22` |
+| Current Version | `v1.5.28` |
 | Declared in | `android/build.gradle` |
-| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.7`) |
-
-> **WARNING**: SDK version is OUTDATED. Siblings are at v1.5.24.
+| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.13`) |
 
 ## Sibling Projects (same product line)
 
@@ -33,9 +31,9 @@
 - `addListener('onRequestId', callback)` — mid-flow event
 - `removeAllListeners()` — cleanup
 - Modes: onboarding, auth, update, signContract
-- Theming: `EnrollTheme` (colors + icons)
+- Theming: `EnrollTheme` (colors + icons + typography)
 - Localization: en, ar
-- Options: forcedDocumentType, exitStep, skipTutorial, correlationId, googleApiKey, requestId, contractSigning
+- Options: forcedDocumentType, exitStep, skipTutorial, correlationId, googleApiKey, requestId, contractSigning (template + PDF file)
 
 ## How to Update When Native SDK Changes
 
@@ -57,8 +55,6 @@
 
 ## TODO — Pending Issues
 
-- [ ] **Android SDK version outdated** — Currently v1.5.22, should be v1.5.24
-  - Update: `android/build.gradle` → `eNROLL-Android:v1.5.24`
 - [ ] **forgetProfileData mode** — Native SDK supports it but not exposed (also missing from Flutter)
   - Implementation: `src/definitions.ts` (add to `EnrollMode` union)
   - **Wait for Flutter implementation first**

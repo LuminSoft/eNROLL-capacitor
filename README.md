@@ -7,8 +7,8 @@ eNROLL is a compliance solution that prevents identity fraud and phishing. Power
 > **⚠️ Native mobile only.** This plugin does **not** support browser/web usage. It requires Capacitor running on a physical or emulated Android/iOS device.
 
 Current native SDK versions:
-- **Android:** eNROLL-Android v1.5.24 (via JitPack) + Innovatrics biometrics
-- **iOS:** EnrollFramework ~> 3.0.9 (via CocoaPods)
+- **Android:** eNROLL-Android v1.5.28 (via JitPack) + Innovatrics biometrics
+- **iOS:** EnrollFramework ~> 3.0.13 (via CocoaPods)
 
 ## Requirements
 
@@ -189,15 +189,42 @@ const result = await Enroll.startEnroll({
 
 ### Sign Contract Mode
 
+Sign contract supports two sub-modes:
+
+#### Contract Template (server-side template)
+
+Provide a `templateId` configured in your eNROLL dashboard. The SDK generates the contract from the template.
+
 ```typescript
 const result = await Enroll.startEnroll({
   tenantId: 'YOUR_TENANT_ID',
   tenantSecret: 'YOUR_TENANT_SECRET',
   enrollMode: 'signContract',
+  applicationId: 'APPLICATION_ID',
   templateId: '12345',
-  contractParameters: '{"key": "value"}',
+  contractParameters: '{"name": "John", "amount": "5000"}',
 });
 ```
+
+#### PDF File (client-side PDF)
+
+Provide a Base64-encoded PDF directly. No `templateId` is needed.
+
+```typescript
+// Read PDF file and convert to Base64 (e.g., via FileReader)
+const base64Pdf = '...'; // Base64-encoded PDF content
+
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'signContract',
+  applicationId: 'APPLICATION_ID',
+  signContractFile: base64Pdf,
+  contractFileName: 'my_contract.pdf', // optional display name
+});
+```
+
+> **Note:** Either `templateId` or `signContractFile` must be provided for sign contract mode. If both are provided, `signContractFile` takes precedence.
 
 ---
 
@@ -208,7 +235,7 @@ const result = await Enroll.startEnroll({
 | `onboarding` | Register a new user | `tenantId`, `tenantSecret` |
 | `auth` | Authenticate existing user | + `applicationId`, `levelOfTrust` |
 | `update` | Re-verify / update user | + `applicationId` |
-| `signContract` | Sign contract templates | + `templateId` |
+| `signContract` | Sign contract (template or PDF) | + `templateId` **or** `signContractFile` |
 
 ## Request ID and Resume
 
@@ -292,7 +319,7 @@ If the configured step is not part of the tenant's backend flow, the SDK continu
 | `enrollMode` | `EnrollMode` | ✅ | — | SDK flow mode |
 | `applicationId` | `string` | mode-dep | — | Application ID (required for `auth`, `update`) |
 | `levelOfTrust` | `string` | mode-dep | — | Level-of-trust token (required for `auth`) |
-| `templateId` | `string` | mode-dep | — | Contract template ID (required for `signContract`) |
+| `templateId` | `string` | mode-dep | — | Contract template ID (required for `signContract` template mode) |
 | `enrollEnvironment` | `EnrollEnvironment` | | `'staging'` | Target environment |
 | `localizationCode` | `EnrollLocalization` | | `'en'` | UI language |
 | `googleApiKey` | `string` | | — | Google Maps API key for location step |
@@ -300,7 +327,9 @@ If the configured step is not part of the tenant's backend flow, the SDK continu
 | `correlationId` | `string` | | — | Link your user ID with eNROLL request ID |
 | `requestId` | `string` | | — | Resume a previous enrollment request |
 | `contractParameters` | `string` | | — | JSON string of contract parameters |
-| `enrollTheme` | `EnrollTheme` | | — | Unified theme (colors + icons) |
+| `signContractFile` | `string` | | — | Base64-encoded PDF for sign contract step |
+| `contractFileName` | `string` | | — | Custom filename for the contract PDF |
+| `enrollTheme` | `EnrollTheme` | | — | Unified theme (colors + icons + typography) |
 | `appColors` | `EnrollColors` | | — | Color overrides (deprecated — use `enrollTheme.colors`) |
 | `enrollForcedDocumentType` | `EnrollForcedDocumentType` | | — | Force specific document type |
 | `enrollExitStep` | `EnrollStepType` | | — | Auto-close SDK after this step |
@@ -367,6 +396,69 @@ Available icon groups: `logo`, `location`, `nationalId`, `passport`, `phone`, `e
 
 See `EnrollIcons` in `src/definitions.ts` for the full type reference.
 
+### Typography
+
+Customize fonts, size presets, and localization overrides (works on **Android and iOS**):
+
+```typescript
+await Enroll.startEnroll({
+  // ...required params...
+  enrollTheme: {
+    typography: {
+      fontFamily: 'itim_regular',    // res/font name (Android) or PostScript name (iOS)
+      dynamicTypeEnabled: true,
+      sizes: 'large',                // 'default' | 'medium' | 'large'
+      localizationOverrides: {
+        englishFileName: 'enroll_localizations_en', // loaded from app assets/bundle
+        arabicFileName: 'enroll_localizations_ar',
+      },
+    },
+  },
+});
+```
+
+#### Font Type Setup
+
+| Platform | How to add a custom font |
+|----------|-------------------------|
+| **Android** | Place `.ttf`/`.otf` in `android/app/src/main/res/font/`. Reference the filename (without extension) as `fontFamily`. |
+| **iOS** | Add `.ttf`/`.otf` to the Xcode project, register it under `UIAppFonts` in `Info.plist`. Use the PostScript/family name as `fontFamily`. |
+
+The example app includes these bundled fonts: `itim_regular`, `merriweather_variable`, `amiri_regular`, `reem_kufi_variable`.
+
+#### Font Size Presets
+
+| Value | Description |
+|-------|-------------|
+| `'default'` | Small — SDK default sizing |
+| `'medium'` | Medium — slightly larger |
+| `'large'` | Large — accessibility-friendly |
+
+#### Localization Overrides
+
+Override any SDK UI string (button labels, error messages, instructions) by providing JSON files:
+
+- **Android:** Place files in `android/app/src/main/assets/` (e.g., `enroll_localizations_en.json`)
+- **iOS:** Add files to the Xcode project and ensure they're in "Copy Bundle Resources"
+
+JSON format:
+
+```json
+{
+  "localizationOverrides": {
+    "en": {
+      "welcome": "Welcome",
+      "start": "Start",
+      "exit": "Exit",
+      "continue_to_next": "Continue",
+      "termsAndConditions": "Terms & Conditions"
+    }
+  }
+}
+```
+
+See the example app's `enroll_localizations_en.json` / `enroll_localizations_ar.json` for the complete list of customizable keys.
+
 ---
 
 ## Platform Limitations
@@ -375,6 +467,8 @@ See `EnrollIcons` in `src/definitions.ts` for the full type reference.
 |---------|---------|-----|
 | Color theming | ✅ | ✅ |
 | Icon customization | ✅ | ✅ |
+| Typography | ✅ | ✅ |
+| Sign contract with PDF file | ✅ | ✅ |
 | Biometric SDK (Innovatrics) | ✅ | ✅ |
 | Simulator support | ✅ (emulator) | ❌ (device only) |
 
@@ -407,7 +501,8 @@ Check the required fields for the selected mode:
 - `onboarding`: `tenantId`, `tenantSecret`
 - `auth`: `tenantId`, `tenantSecret`, `applicationId`, `levelOfTrust`
 - `update`: `tenantId`, `tenantSecret`, `applicationId`
-- `signContract`: `tenantId`, `tenantSecret`, `templateId`
+- `signContract` (template): `tenantId`, `tenantSecret`, `templateId`
+- `signContract` (PDF): `tenantId`, `tenantSecret`, `signContractFile`
 
 ### iOS Pod Install or Build Issues
 

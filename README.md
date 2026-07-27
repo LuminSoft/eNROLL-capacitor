@@ -7,8 +7,8 @@ eNROLL is a compliance solution that prevents identity fraud and phishing. Power
 > **⚠️ Native mobile only.** This plugin does **not** support browser/web usage. It requires Capacitor running on a physical or emulated Android/iOS device.
 
 Current native SDK versions:
-- **Android:** eNROLL-Android v1.5.28 (via JitPack) + Innovatrics biometrics
-- **iOS:** EnrollFramework ~> 3.0.13 (via CocoaPods)
+- **Android:** eNROLL-Android v1.5.29 (via JitPack) + Innovatrics biometrics
+- **iOS:** EnrollFramework ~> 3.0.16 (via CocoaPods)
 
 ## Requirements
 
@@ -206,6 +206,22 @@ const result = await Enroll.startEnroll({
 });
 ```
 
+#### Multi-Signing (multiple contracts in one journey)
+
+Pass **comma-separated template IDs** to sign multiple contracts in a single signing session. The SDK displays each contract PDF for the user to review and approve in sequence, then signs all of them with a **single OTP**.
+
+```typescript
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'signContract',
+  applicationId: 'APPLICATION_ID',
+  templateId: '56,63,71',  // comma-separated IDs — triggers multi-signing flow
+});
+```
+
+> **Note:** Single-ID behavior is unchanged. Multi-signing requires Android SDK v1.5.29+ and iOS EnrollFramework ~> 3.0.16+.
+
 #### PDF File (client-side PDF)
 
 Provide a Base64-encoded PDF directly. No `templateId` is needed.
@@ -319,7 +335,7 @@ If the configured step is not part of the tenant's backend flow, the SDK continu
 | `enrollMode` | `EnrollMode` | ✅ | — | SDK flow mode |
 | `applicationId` | `string` | mode-dep | — | Application ID (required for `auth`, `update`) |
 | `levelOfTrust` | `string` | mode-dep | — | Level-of-trust token (required for `auth`) |
-| `templateId` | `string` | mode-dep | — | Contract template ID (required for `signContract` template mode) |
+| `templateId` | `string` | mode-dep | — | Contract template ID for `signContract` mode. Comma-separated for multi-signing (e.g. `"56,63,71"`) |
 | `enrollEnvironment` | `EnrollEnvironment` | | `'staging'` | Target environment |
 | `localizationCode` | `EnrollLocalization` | | `'en'` | UI language |
 | `googleApiKey` | `string` | | — | Google Maps API key for location step |

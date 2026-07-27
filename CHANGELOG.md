@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-27
+
+### Added
+
+- **Multi-signing support** in `signContract` mode (Android + iOS):
+  - Pass comma-separated template IDs via `templateId` (e.g. `"56,63,71"`) to sign multiple contracts in a single session
+  - The SDK displays each contract PDF for review and approval in sequence, ordered by `displayOrder`
+  - All contracts are signed with a **single OTP** at the end — no API change required from the plugin side
+  - Single-ID behavior is fully preserved (backward compatible)
+
+### Changed
+
+- Updated Android SDK from v1.5.28 to v1.5.29 (adds multi-signing flow, `GetSignContractFiles` API, `GetSignContractFileByRequestId` API)
+- Updated iOS EnrollFramework pod from ~> 3.0.13 to ~> 3.0.16 (adds `contractTemplateId: String` support for multi-signing)
+- Fixed iOS bridge: `contractTemplateId` was incorrectly converted to `Int`; now passed as `String?` to support comma-separated IDs
+- Fixed iOS bridge: `signContract` mode now accepts either `templateId` OR `signContractFile` (matching Android validation)
+- Updated `templateId` documentation to document comma-separated multi-signing usage
+
 ## [1.2.0] - 2026-07-14
 
 ### Added

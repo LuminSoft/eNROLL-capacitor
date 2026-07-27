@@ -14,9 +14,9 @@
 |---|---|
 | Branch | `release/production` |
 | Artifact | `com.github.LuminSoft:eNROLL-Android` |
-| Current Version | `v1.5.28` |
+| Current Version | `v1.5.29` |
 | Declared in | `android/build.gradle` |
-| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.13`) |
+| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.16`) |
 
 ## Sibling Projects (same product line)
 
@@ -33,7 +33,7 @@
 - Modes: onboarding, auth, update, signContract
 - Theming: `EnrollTheme` (colors + icons + typography)
 - Localization: en, ar
-- Options: forcedDocumentType, exitStep, skipTutorial, correlationId, googleApiKey, requestId, contractSigning (template + PDF file)
+- Options: forcedDocumentType, exitStep, skipTutorial, correlationId, googleApiKey, requestId, contractSigning (template + PDF file), multiSigning (comma-separated templateId)
 
 ## How to Update When Native SDK Changes
 

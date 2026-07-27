@@ -63,8 +63,9 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         }
 
         if enrollMode == .signContarct {
-            if templateId.isEmpty {
-                call.reject("templateId is required for signContract mode", "INVALID_ARGUMENT")
+            let hasSignContractFile = !(call.getString("signContractFile") ?? "").isEmpty
+            if templateId.isEmpty && !hasSignContractFile {
+                call.reject("templateId or signContractFile is required for signContract mode", "INVALID_ARGUMENT")
                 return
             }
         }
@@ -79,7 +80,7 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         let contractParameters = call.getString("contractParameters") ?? ""
         let enrollForcedDocumentType = parseEnrollForcedDocumentType(call.getString("enrollForcedDocumentType"))
         let exitStep = parseExitStep(call.getString("enrollExitStep"))
-        let contractTemplateId = Int(templateId)
+        let contractTemplateId: String? = templateId.isEmpty ? nil : templateId
         let contractFileName = call.getString("contractFileName")
         let signContractFile: Data? = {
             guard let base64Str = call.getString("signContractFile"), !base64Str.isEmpty else { return nil }

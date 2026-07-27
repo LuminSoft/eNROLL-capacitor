@@ -398,7 +398,13 @@ export interface StartEnrollOptions {
   /** Level-of-trust token. Required for `auth` mode. */
   levelOfTrust?: string;
 
-  /** Contract template ID. Required for `signContract` mode. */
+  /**
+   * Contract template ID. Required for `signContract` template mode.
+   *
+   * **Multi-signing:** pass comma-separated IDs to sign multiple contracts in a single journey
+   * (e.g. `"56,63,71"`). The SDK displays each contract PDF for approval in order, then signs
+   * all with a single OTP. Single-ID behavior is unchanged.
+   */
   templateId?: string;
 
   // ---- Optional ----

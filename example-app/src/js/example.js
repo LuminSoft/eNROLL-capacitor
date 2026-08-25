@@ -1,8 +1,8 @@
 import { Enroll } from 'enroll-capacitor';
 
 const defaultValues = {
-  tenantId: '3bab5a01-b3e2-4900-890c-d5fc6990e610',
-  tenantSecret: 'e84e5d36-ede2-42a6-abba-ae01a9b773fc',
+  tenantId: '9235e61e-3322-4940-a78e-4c182cf7ef63',
+  tenantSecret: '736db9db-680a-4608-b545-1c7d636c7487',
   requestId: '',
   enrollMode: 'onboarding',
   enrollEnvironment: 'staging',
@@ -13,6 +13,7 @@ const defaultValues = {
   googleApiKey: 'GOOGLE_API_KEY',
   correlationId: 'correlationIdTest',
   templateId: 'templateId',
+  questionnaireId: 'QUESTIONNAIRE_ID',
   contractParameters: 'contractParameters',
   enrollExitStep: 'personalConfirmation',
   logoMode: 'custom',
@@ -58,6 +59,10 @@ function normalizeOptionalField(value) {
 }
 
 // --- Sign Contract Mode UI toggling ---
+
+function isQuestionnaireMode() {
+  return document.getElementById('enrollMode').value === 'questionnaire';
+}
 
 function isSignContractMode() {
   return document.getElementById('enrollMode').value === 'signContract';
@@ -137,6 +142,7 @@ function collectEnrollTheme() {
   const logo = {
     mode: logoMode,
     renderingMode: document.getElementById('logoRenderingMode').value,
+    showSponsoredBy: document.getElementById('showSponsoredBy').checked,
   };
 
   if (logoMode === 'custom' && logoAssetName !== undefined) {
@@ -207,6 +213,8 @@ function applyDefaults() {
   document.getElementById('contractFileName').value = '';
   document.getElementById('pdfFileName').textContent = '';
   document.getElementById('pdfFileInput').value = '';
+  document.getElementById('questionnaireId').value = defaultValues.questionnaireId;
+  document.getElementById('showSponsoredBy').checked = true;
 
   // Normal mode fields
   document.getElementById('templateIdNormal').value = defaultValues.templateId;
@@ -243,6 +251,7 @@ function collectOptions() {
     googleApiKey: document.getElementById('googleApiKey').value,
     correlationId: document.getElementById('correlationId').value,
     enrollExitStep: document.getElementById('enrollExitStep').value,
+    questionnaireId: document.getElementById('questionnaireId').value,
     enrollTheme: collectEnrollTheme(),
   };
 
@@ -275,6 +284,19 @@ function collectOptions() {
 
 async function startEnroll() {
   clearResults();
+
+  if (isQuestionnaireMode()) {
+    const appId = document.getElementById('applicationId').value.trim();
+    const questionnaireId = document.getElementById('questionnaireId').value.trim();
+    if (!appId || appId === 'APPLICATION_ID') {
+      setStatus('Application ID is required for questionnaire mode', 'error');
+      return;
+    }
+    if (!questionnaireId || questionnaireId === 'QUESTIONNAIRE_ID') {
+      setStatus('Questionnaire ID is required for questionnaire mode', 'error');
+      return;
+    }
+  }
 
   // Validation for sign contract mode
   if (isSignContractMode()) {

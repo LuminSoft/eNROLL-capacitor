@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-25
+
+### Added
+
+- **Questionnaire mode** (`enrollMode: 'questionnaire'`) with required `questionnaireId` and `applicationId` (Android + iOS)
+- `showSponsoredBy` on `EnrollLogoConfig` so the "Sponsored by" splash footer can be toggled from TypeScript through both native bridges
+
+### Changed
+
+- Updated Android SDK from v1.5.29 to v1.5.32
+- Updated iOS EnrollFramework pod from ~> 3.0.16 to ~> 3.0.21
+- Documented questionnaire mode in README, API reference, Ionic/Angular guide, and the example app to match the Flutter plugin contract
+
 ## [1.3.0] - 2026-07-27
 
 ### Added

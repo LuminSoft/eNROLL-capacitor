@@ -103,6 +103,7 @@ class EnrollPlugin : Plugin() {
         val applicationId = call.getString("applicationId") ?: ""
         val levelOfTrust = call.getString("levelOfTrust") ?: ""
         val templateId = call.getString("templateId") ?: ""
+        val questionnaireId = call.getString("questionnaireId") ?: ""
 
         if (enrollMode == EnrollMode.AUTH) {
             if (applicationId.isEmpty()) {
@@ -111,6 +112,17 @@ class EnrollPlugin : Plugin() {
             }
             if (levelOfTrust.isEmpty()) {
                 call.reject("levelOfTrust is required for auth mode", "INVALID_ARGUMENT")
+                return
+            }
+        }
+
+        if (enrollMode == EnrollMode.QUESTIONNAIRE) {
+            if (applicationId.isEmpty()) {
+                call.reject("applicationId is required for questionnaire mode", "INVALID_ARGUMENT")
+                return
+            }
+            if (questionnaireId.isEmpty()) {
+                call.reject("questionnaireId is required for questionnaire mode", "INVALID_ARGUMENT")
                 return
             }
         }
@@ -239,6 +251,7 @@ class EnrollPlugin : Plugin() {
                 appTheme = appTheme,
                 enrollForcedDocumentType = enrollForcedDocumentType,
                 requestId = requestId,
+                questionnaireId = questionnaireId,
                 templateId = templateId,
                 contractParameters = contractParameters,
                 signContractFile = signContractFileBytes,
@@ -265,6 +278,7 @@ class EnrollPlugin : Plugin() {
             "auth" -> EnrollMode.AUTH
             "update" -> EnrollMode.UPDATE
             "signContract" -> EnrollMode.SIGN_CONTRACT
+            "questionnaire" -> EnrollMode.QUESTIONNAIRE
             else -> null
         }
     }
@@ -382,7 +396,13 @@ class EnrollPlugin : Plugin() {
             "template" -> IconRenderingMode.TEMPLATE
             else -> IconRenderingMode.ORIGINAL
         }
-        return LogoConfig(mode = mode, asset = asset, renderingMode = renderingMode)
+        val showSponsoredBy = json.optBoolean("showSponsoredBy", true)
+        return LogoConfig(
+            mode = mode,
+            asset = asset,
+            renderingMode = renderingMode,
+            showSponsoredBy = showSponsoredBy
+        )
     }
 
     private fun parseAppIcons(json: JSONObject): AppIcons {

@@ -235,3 +235,18 @@ if (result.exitStepCompleted) {
   console.log('Resume with requestId:', result.requestId);
 }
 ```
+
+### Questionnaire Mode
+
+Use `enrollMode: 'questionnaire'` for a standalone questionnaire configured in the Dashboard. Both `applicationId` and `questionnaireId` are required.
+
+```typescript
+const result = await this.enrollService.startEnroll({
+  tenantId: environment.enroll.tenantId,
+  tenantSecret: environment.enroll.tenantSecret,
+  enrollEnvironment: environment.enroll.environment,
+  enrollMode: 'questionnaire',
+  applicationId: 'APPLICATION_ID',
+  questionnaireId: 'QUESTIONNAIRE_ID',
+});
+```

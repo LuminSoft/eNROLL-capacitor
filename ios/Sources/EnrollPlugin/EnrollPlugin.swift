@@ -50,6 +50,7 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         let applicationId = call.getString("applicationId") ?? ""
         let levelOfTrust = call.getString("levelOfTrust") ?? ""
         let templateId = call.getString("templateId") ?? ""
+        let questionnaireId = call.getString("questionnaireId") ?? ""
 
         if enrollMode == .authentication {
             if applicationId.isEmpty {
@@ -58,6 +59,17 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             }
             if levelOfTrust.isEmpty {
                 call.reject("levelOfTrust is required for auth mode", "INVALID_ARGUMENT")
+                return
+            }
+        }
+
+        if enrollMode == .questionnaire {
+            if applicationId.isEmpty {
+                call.reject("applicationId is required for questionnaire mode", "INVALID_ARGUMENT")
+                return
+            }
+            if questionnaireId.isEmpty {
+                call.reject("questionnaireId is required for questionnaire mode", "INVALID_ARGUMENT")
                 return
             }
         }
@@ -153,7 +165,8 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
                     signContarctParam: contractParameters.isEmpty ? nil : contractParameters,
                     signContarctFile: signContractFile,
                     signContarctFileName: contractFileName,
-                    exitStep: exitStep
+                    exitStep: exitStep,
+                    questionnaireCode: questionnaireId.isEmpty ? nil : questionnaireId
                 )
 
                 let enrollVC = try Enroll.initViewController(
@@ -211,6 +224,8 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             return .update
         case "signcontract":
             return .signContarct
+        case "questionnaire":
+            return .questionnaire
         default:
             return nil
         }
@@ -502,11 +517,16 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
             }
         }
 
-        if let _ = dictionary["assetName"] as? String {
+        if dictionary["assetName"] as? String != nil {
             icon = parseEnrollIcon(from: dictionary)
         }
 
-        return LogoConfig(mode: mode, icon: icon)
+        var showSponsoredBy = true
+        if let showSponsoredByValue = dictionary["showSponsoredBy"] as? Bool {
+            showSponsoredBy = showSponsoredByValue
+        }
+
+        return LogoConfig(mode: mode, icon: icon, showSponsoredBy: showSponsoredBy)
     }
 
     private func parseEnrollIcon(from dictionary: [String: Any]) -> EnrollIcon {

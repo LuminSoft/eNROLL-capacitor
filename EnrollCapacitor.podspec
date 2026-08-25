@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.source_files = 'ios/Sources/**/*.{swift,h,m,c,cc,mm,cpp}'
   s.ios.deployment_target = '13.0'
   s.dependency 'Capacitor'
-  s.dependency 'EnrollFramework', '~> 3.0.16'
+  s.dependency 'EnrollFramework', '~> 3.0.21'
   s.swift_version = '5.0'
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',

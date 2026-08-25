@@ -68,9 +68,10 @@ removeAllListeners(): Promise<void>
 | `tenantId` | `string` | ✅ | — | Organization tenant ID |
 | `tenantSecret` | `string` | ✅ | — | Organization tenant secret |
 | `enrollMode` | `EnrollMode` | ✅ | — | SDK flow mode |
-| `applicationId` | `string` | mode | — | Required for `auth`, `update` |
+| `applicationId` | `string` | mode | — | Application ID. Required for `auth`, `update`, `signContract`, and `questionnaire` |
 | `levelOfTrust` | `string` | mode | — | Required for `auth` |
-| `templateId` | `string` | mode | — | Required for `signContract` |
+| `templateId` | `string` | mode | — | Required for template-based `signContract` |
+| `questionnaireId` | `string` | mode | — | Optional. Allows applicants to start and answer a questionnaire identified by its ID. Required for `questionnaire` |
 | `enrollEnvironment` | `EnrollEnvironment` | | `'staging'` | Target environment |
 | `localizationCode` | `EnrollLocalization` | | `'en'` | UI language |
 | `googleApiKey` | `string` | | — | Google Maps API key |
@@ -114,7 +115,25 @@ removeAllListeners(): Promise<void>
 
 ### `EnrollMode`
 
-`'onboarding'` | `'auth'` | `'update'` | `'signContract'`
+`'onboarding'` | `'auth'` | `'update'` | `'signContract'` | `'questionnaire'`
+
+| Mode | Description | Requirements |
+|------|-------------|--------------|
+| `onboarding` | Registering a new user in the system. | `tenantId`, `tenantSecret` |
+| `auth` | Verifying the identity of an existing user. | + `applicationId`, `levelOfTrust` |
+| `update` | Updating or re-verifying an existing user. | + `applicationId` |
+| `signContract` | Signing a contract by template or PDF file. | + `applicationId`, and `templateId` **or** `signContractFile` |
+| `questionnaire` | Allows applicants to start and answer a questionnaire identified by its ID and configured in the Dashboard. | + `applicationId`, `questionnaireId` |
+
+```typescript
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'questionnaire',
+  applicationId: 'APPLICATION_ID',
+  questionnaireId: 'QUESTIONNAIRE_ID',
+});
+```
 
 ### `EnrollEnvironment`
 

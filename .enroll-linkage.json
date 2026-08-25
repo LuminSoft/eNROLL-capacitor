@@ -6,12 +6,12 @@
     "repo": "/Users/luminsoft/StudioProjects/ekyc-android",
     "branch": "release/production",
     "androidArtifact": "com.github.LuminSoft:eNROLL-Android",
-    "androidVersion": "v1.5.29",
+    "androidVersion": "v1.5.32",
     "iosDistribution": "pod",
-    "iosVersion": "~> 3.0.16",
+    "iosVersion": "~> 3.0.21",
     "xcframeworkSource": null
   },
-  "pluginVersion": "1.3.0",
+  "pluginVersion": "1.4.0",
   "relatedProjects": [
     {
       "name": "enroll_flutter_plugin",
@@ -40,6 +40,7 @@
       "skipTutorial",
       "requestIdTracking",
       "contractSigning",
+      "questionnaire",
       "callbacks"
     ],
     "implementedInFlutter": [
@@ -56,13 +57,14 @@
       "skipTutorial",
       "requestIdTracking",
       "contractSigning",
+      "questionnaire",
       "callbacks"
     ],
     "exposedByThisProject": [
       "startEnroll",
       "addListener:onRequestId",
       "removeAllListeners",
-      "enrollModes:onboarding,auth,update,signContract",
+      "enrollModes:onboarding,auth,update,signContract,questionnaire",
       "theming",
       "iconCustomization",
       "typography",
@@ -73,6 +75,7 @@
       "skipTutorial",
       "googleApiKey",
       "requestId",
+      "questionnaireId",
       "contractSigning",
       "signContractFile",
       "multiSigning"
@@ -98,5 +101,5 @@
     "copyFlutterToSiblingPlugins": "/copy-flutter-to-sibling-plugins",
     "checkSync": "bash /Users/luminsoft/StudioProjects/ekyc-android/scripts/check-enroll-sync.sh"
   },
-  "lastVerifiedAt": "2026-07-27T10:00:00Z"
+  "lastVerifiedAt": "2026-08-25T00:00:00Z"
 }

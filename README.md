@@ -7,8 +7,8 @@ eNROLL is a compliance solution that prevents identity fraud and phishing. Power
 > **⚠️ Native mobile only.** This plugin does **not** support browser/web usage. It requires Capacitor running on a physical or emulated Android/iOS device.
 
 Current native SDK versions:
-- **Android:** eNROLL-Android v1.5.29 (via JitPack) + Innovatrics biometrics
-- **iOS:** EnrollFramework ~> 3.0.16 (via CocoaPods)
+- **Android:** eNROLL-Android v1.5.32 (via JitPack) + Innovatrics biometrics
+- **iOS:** EnrollFramework ~> 3.0.21 (via CocoaPods)
 
 ## Requirements
 
@@ -153,6 +153,8 @@ try {
     enrollEnvironment: 'staging',
     localizationCode: 'en',
     skipTutorial: false,
+    applicationId: 'APPLICATION_ID',
+    questionnaireId: 'QUESTIONNAIRE_ID',
   });
 
   console.log('Success! Applicant ID:', result.applicantId);
@@ -242,16 +244,44 @@ const result = await Enroll.startEnroll({
 
 > **Note:** Either `templateId` or `signContractFile` must be provided for sign contract mode. If both are provided, `signContractFile` takes precedence.
 
+### Questionnaire Mode
+
+Use `enrollMode: 'questionnaire'` when applicants need to start and answer a questionnaire identified by its ID and configured in the Dashboard.
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `tenantId` | ✅ | Organization tenant ID |
+| `tenantSecret` | ✅ | Organization tenant secret |
+| `applicationId` | ✅ | Applicant / application ID |
+| `questionnaireId` | ✅ | Questionnaire ID from the Dashboard |
+
+```typescript
+const result = await Enroll.startEnroll({
+  tenantId: 'YOUR_TENANT_ID',
+  tenantSecret: 'YOUR_TENANT_SECRET',
+  enrollMode: 'questionnaire',
+  enrollEnvironment: 'staging',
+  localizationCode: 'en',
+  applicationId: 'APPLICATION_ID',
+  questionnaireId: 'QUESTIONNAIRE_ID',
+});
+```
+
+> `questionnaireId` is optional on the plugin API, but **required** when `enrollMode` is `'questionnaire'`. The native SDK rejects the launch if either `applicationId` or `questionnaireId` is empty.
+
 ---
 
 ## Enroll Modes
 
-| Mode | Description | Required Params |
-|------|-------------|-----------------|
-| `onboarding` | Register a new user | `tenantId`, `tenantSecret` |
-| `auth` | Authenticate existing user | + `applicationId`, `levelOfTrust` |
-| `update` | Re-verify / update user | + `applicationId` |
-| `signContract` | Sign contract (template or PDF) | + `templateId` **or** `signContractFile` |
+The SDK supports **5 modes**:
+
+| Mode | Description | Requirements |
+|------|-------------|--------------|
+| `onboarding` | Registering a new user in the system. | `tenantId`, `tenantSecret` |
+| `auth` | Verifying the identity of an existing user. | `tenantId`, `tenantSecret`, **`applicationId`**, **`levelOfTrust`** |
+| `update` | Updating or re-verifying the identity of an existing user. | `tenantId`, `tenantSecret`, **`applicationId`** |
+| `signContract` | Signing a contract by template or by PDF file. | `tenantId`, `tenantSecret`, **`applicationId`**, and either **`templateId`** or **`signContractFile`** |
+| `questionnaire` | Allows applicants to start and answer a questionnaire identified by its ID and configured in the Dashboard. | `tenantId`, `tenantSecret`, **`applicationId`**, and **`questionnaireId`** |
 
 ## Request ID and Resume
 
@@ -333,9 +363,10 @@ If the configured step is not part of the tenant's backend flow, the SDK continu
 | `tenantId` | `string` | ✅ | — | Organization tenant ID |
 | `tenantSecret` | `string` | ✅ | — | Organization tenant secret |
 | `enrollMode` | `EnrollMode` | ✅ | — | SDK flow mode |
-| `applicationId` | `string` | mode-dep | — | Application ID (required for `auth`, `update`) |
-| `levelOfTrust` | `string` | mode-dep | — | Level-of-trust token (required for `auth`) |
+| `applicationId` | `string` | mode-dep | — | Write your Application ID. Required for `auth`, `update`, `signContract`, and `questionnaire` |
+| `levelOfTrust` | `string` | mode-dep | — | Organization level of trust. Required for `auth` |
 | `templateId` | `string` | mode-dep | — | Contract template ID for `signContract` mode. Comma-separated for multi-signing (e.g. `"56,63,71"`) |
+| `questionnaireId` | `string` | mode-dep | — | Optional. Allows applicants to start and answer a questionnaire identified by its ID. **Required for `questionnaire` mode** |
 | `enrollEnvironment` | `EnrollEnvironment` | | `'staging'` | Target environment |
 | `localizationCode` | `EnrollLocalization` | | `'en'` | UI language |
 | `googleApiKey` | `string` | | — | Google Maps API key for location step |
@@ -395,7 +426,7 @@ await Enroll.startEnroll({
   // ...required params...
   enrollTheme: {
     icons: {
-      logo: { mode: 'custom', assetName: 'my_company_logo', renderingMode: 'original' },
+      logo: { mode: 'custom', assetName: 'my_company_logo', renderingMode: 'original', showSponsoredBy: true },
       location: {
         tutorial: { assetName: 'ic_location_tutorial' },
         requestAccess: { assetName: 'ic_location_access' },
@@ -519,6 +550,7 @@ Check the required fields for the selected mode:
 - `update`: `tenantId`, `tenantSecret`, `applicationId`
 - `signContract` (template): `tenantId`, `tenantSecret`, `templateId`
 - `signContract` (PDF): `tenantId`, `tenantSecret`, `signContractFile`
+- `questionnaire`: `tenantId`, `tenantSecret`, `applicationId`, `questionnaireId`
 
 ### iOS Pod Install or Build Issues
 

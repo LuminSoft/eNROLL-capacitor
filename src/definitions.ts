@@ -13,16 +13,18 @@ export type EnrollEnvironment = 'staging' | 'production';
 
 /**
  * The mode of the enrollment flow.
- * - `'onboarding'`   — register a new user
- * - `'auth'`         — authenticate an existing user (requires `applicationId` + `levelOfTrust`)
- * - `'update'`       — re-verify / update an existing user
- * - `'signContract'` — sign a contract template (requires `templateId`)
+ * - `'onboarding'`    — register a new user
+ * - `'auth'`          — authenticate an existing user (requires `applicationId` + `levelOfTrust`)
+ * - `'update'`        — re-verify / update an existing user
+ * - `'signContract'`  — sign a contract template (requires `templateId`)
+ * - `'questionnaire'` — standalone questionnaire (requires `applicationId` + `questionnaireId`)
  */
 export type EnrollMode =
   | 'onboarding'
   | 'auth'
   | 'update'
-  | 'signContract';
+  | 'signContract'
+  | 'questionnaire';
 
 /**
  * UI language for the enrollment flow.
@@ -132,6 +134,8 @@ export interface EnrollLogoConfig {
   assetName?: string;
   /** How the logo should be rendered. Defaults to `'original'`. */
   renderingMode?: EnrollIconRenderingMode;
+  /** Whether to show the "Sponsored by" splash footer. Defaults to `true`. */
+  showSponsoredBy?: boolean;
 }
 
 // -- Business-flow icon groups --
@@ -392,11 +396,17 @@ export interface StartEnrollOptions {
 
   // ---- Conditionally required ----
 
-  /** Application / applicant ID. Required for `auth` and `update` modes. */
+  /** Application / applicant ID. Required for `auth`, `update`, and `questionnaire` modes. */
   applicationId?: string;
 
   /** Level-of-trust token. Required for `auth` mode. */
   levelOfTrust?: string;
+
+  /**
+   * Questionnaire ID. Required for `questionnaire` mode.
+   * Identifies the dashboard-configured questionnaire to present.
+   */
+  questionnaireId?: string;
 
   /**
    * Contract template ID. Required for `signContract` template mode.

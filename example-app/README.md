@@ -29,6 +29,18 @@ When you select `signContract` as the Enroll Mode, the "Sign Contract Options" p
 
 ---
 
+### Questionnaire Mode
+
+Select `questionnaire` as the Enroll Mode to start a standalone questionnaire configured in the Dashboard.
+
+Required fields:
+- **Application ID**
+- **Questionnaire ID**
+
+The plugin rejects the launch if either value is missing.
+
+---
+
 ### Font Type & Font Size
 
 The example includes 4 bundled fonts (same as the native Android demo app):

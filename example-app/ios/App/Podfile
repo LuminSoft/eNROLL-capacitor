@@ -1,6 +1,6 @@
+source 'https://cdn.cocoapods.org/'
 source 'https://github.com/LuminSoft/eNROLL-iOS-specs.git'
 source 'https://github.com/innovatrics/innovatrics-podspecs.git'
-source 'https://github.com/CocoaPods/Specs.git'
 
 platform :ios, '15.0'
 use_frameworks! :linkage => :static

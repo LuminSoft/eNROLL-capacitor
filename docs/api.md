@@ -173,7 +173,7 @@ All properties are optional `EnrollColor`:
 | Code | Meaning |
 |------|---------|
 | `INVALID_ARGUMENT` | Missing or invalid required parameter |
-| `FLOW_IN_PROGRESS` | Another enrollment flow is already running |
+| `USER_CANCELLED` | User exited/cancelled, or a new `startEnroll` replaced the previous session |
 | `ACTIVITY_ERROR` | Android Activity not available |
 | `VIEW_CONTROLLER_ERROR` | iOS ViewController not available |
 | `ENROLL_ERROR` | Native SDK returned an error |

@@ -535,6 +535,7 @@ export interface EnrollPlugin {
    *
    * Resolves with {@link EnrollSuccessResult} on success.
    * Rejects with an error whose `data` matches {@link EnrollErrorResult} on failure.
+   * Exit/Cancel before completion rejects with code `USER_CANCELLED`.
    *
    * @param options — configuration for the enrollment session
    */

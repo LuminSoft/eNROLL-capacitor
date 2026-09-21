@@ -7,8 +7,8 @@ eNROLL is a compliance solution that prevents identity fraud and phishing. Power
 > **⚠️ Native mobile only.** This plugin does **not** support browser/web usage. It requires Capacitor running on a physical or emulated Android/iOS device.
 
 Current native SDK versions:
-- **Android:** eNROLL-Android v1.5.32 (via JitPack) + Innovatrics biometrics
-- **iOS:** EnrollFramework ~> 3.0.21 (via CocoaPods)
+- **Android:** eNROLL-Android v1.5.34 (via JitPack) + Innovatrics biometrics
+- **iOS:** EnrollFramework ~> 3.0.25 (via CocoaPods)
 
 ## Requirements
 
@@ -539,7 +539,7 @@ If document scanning, face liveness, or NFC fails at runtime, verify that `iengi
 
 ### FLOW_IN_PROGRESS
 
-`FLOW_IN_PROGRESS` means `startEnroll` was called while another enrollment flow is already open. Disable the launch button until the returned promise resolves or rejects.
+This error is no longer thrown. After Exit/Cancel, `startEnroll` rejects with `USER_CANCELLED` and a later Start launches a new session.
 
 ### INVALID_ARGUMENT
 

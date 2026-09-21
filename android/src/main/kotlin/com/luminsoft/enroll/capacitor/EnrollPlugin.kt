@@ -53,9 +53,9 @@ class EnrollPlugin : Plugin() {
         private const val TAG = "EnrollPlugin"
     }
 
-    /** Guard against launching a second flow while one is already running. */
+    /** Previous startEnroll call, replaced when the host starts again (Flutter-style). */
     @Volatile
-    private var isFlowInProgress = false
+    private var savedCall: PluginCall? = null
 
     // ------------------------------------------------------------------
     // Plugin method exposed to TypeScript
@@ -63,11 +63,6 @@ class EnrollPlugin : Plugin() {
 
     @PluginMethod
     fun startEnroll(call: PluginCall) {
-        if (isFlowInProgress) {
-            call.reject("An enrollment flow is already in progress", "FLOW_IN_PROGRESS")
-            return
-        }
-
         val currentActivity = activity
         if (currentActivity == null) {
             call.reject("Activity is not available", "ACTIVITY_ERROR")
@@ -196,8 +191,10 @@ class EnrollPlugin : Plugin() {
             typography = typography
         )
 
-        // ---- Launch the SDK ----
-        isFlowInProgress = true
+        // A new startEnroll replaces any previous session so Exit/Cancel then Start works again.
+        savedCall?.reject("Enrollment was cancelled", "USER_CANCELLED")
+        call.setKeepAlive(true)
+        savedCall = call
 
         try {
             eNROLL.init(
@@ -211,7 +208,8 @@ class EnrollPlugin : Plugin() {
                 enrollCallback = object : EnrollCallback {
                     override fun success(enrollSuccessModel: EnrollSuccessModel) {
                         Log.d(TAG, "eNROLL success: ${enrollSuccessModel.enrollMessage}")
-                        isFlowInProgress = false
+                        if (savedCall !== call) return
+                        savedCall = null
 
                         val result = JSObject()
                         result.put("applicantId", enrollSuccessModel.applicantId ?: "")
@@ -225,7 +223,8 @@ class EnrollPlugin : Plugin() {
 
                     override fun error(enrollFailedModel: EnrollFailedModel) {
                         Log.e(TAG, "eNROLL error: ${enrollFailedModel.failureMessage}")
-                        isFlowInProgress = false
+                        if (savedCall !== call) return
+                        savedCall = null
 
                         val errorData = JSObject()
                         errorData.put("message", enrollFailedModel.failureMessage)
@@ -263,7 +262,7 @@ class EnrollPlugin : Plugin() {
 
         } catch (e: Exception) {
             Log.e(TAG, "Error starting enrollment: ${e.message}", e)
-            isFlowInProgress = false
+            savedCall = null
             call.reject("Failed to start enrollment: ${e.message}", "ENROLL_LAUNCH_ERROR")
         }
     }

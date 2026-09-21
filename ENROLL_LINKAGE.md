@@ -14,9 +14,9 @@
 |---|---|
 | Branch | `release/production` |
 | Artifact | `com.github.LuminSoft:eNROLL-Android` |
-| Current Version | `v1.5.32` |
+| Current Version | `v1.5.34` |
 | Declared in | `android/build.gradle` |
-| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.21`) |
+| iOS Distribution | CocoaPods (`EnrollFramework ~> 3.0.25`) |
 
 ## Sibling Projects (same product line)
 

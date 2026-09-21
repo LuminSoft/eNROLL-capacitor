@@ -6,12 +6,12 @@
     "repo": "/Users/luminsoft/StudioProjects/ekyc-android",
     "branch": "release/production",
     "androidArtifact": "com.github.LuminSoft:eNROLL-Android",
-    "androidVersion": "v1.5.32",
+    "androidVersion": "v1.5.34",
     "iosDistribution": "pod",
-    "iosVersion": "~> 3.0.21",
+    "iosVersion": "~> 3.0.25",
     "xcframeworkSource": null
   },
-  "pluginVersion": "1.4.0",
+  "pluginVersion": "1.4.1",
   "relatedProjects": [
     {
       "name": "enroll_flutter_plugin",
@@ -101,5 +101,5 @@
     "copyFlutterToSiblingPlugins": "/copy-flutter-to-sibling-plugins",
     "checkSync": "bash /Users/luminsoft/StudioProjects/ekyc-android/scripts/check-enroll-sync.sh"
   },
-  "lastVerifiedAt": "2026-08-25T00:00:00Z"
+  "lastVerifiedAt": "2026-09-21T00:00:00Z"
 }

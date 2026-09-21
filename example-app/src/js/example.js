@@ -335,10 +335,14 @@ async function startEnroll() {
   } catch (error) {
     const errorPayload = error?.data ?? error;
     setPrettyJson(elements.errorResult, errorPayload);
-    setStatus(
-      `Enrollment failed: ${errorPayload?.message ?? error?.message ?? 'Unknown error'}`,
-      'error',
-    );
+    if (error?.code === 'USER_CANCELLED') {
+      setStatus('Enrollment cancelled. You can start again.', 'info');
+    } else {
+      setStatus(
+        `Enrollment failed: ${errorPayload?.message ?? error?.message ?? 'Unknown error'}`,
+        'error',
+      );
+    }
   } finally {
     elements.startButton.disabled = false;
   }

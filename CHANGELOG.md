@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-09-21
+
+### Fixed
+
+- iOS: starting Sign Contract (or any mode) a second time after Exit/Cancel no longer fails with `FLOW_IN_PROGRESS`. A new `startEnroll` replaces the previous session, presents from the window root view controller, and dismisses any leftover SDK modal first.
+- iOS: Exit/Cancel now rejects `startEnroll` with `USER_CANCELLED` when the SDK UI is dismissed without a success/fail callback, so the host can enable Start again instead of staying on a pending promise.
+
+### Changed
+
+- Removed the `FLOW_IN_PROGRESS` lock on Android and iOS. A second `startEnroll` rejects the previous promise with `USER_CANCELLED` and launches the new flow.
+- Updated Android SDK from v1.5.32 to v1.5.34 (matches Flutter 1.8.2: ePassport NFC raw bytes, location capture, single-template section name)
+- Updated iOS EnrollFramework pod from ~> 3.0.21 to ~> 3.0.25 (matches Flutter 1.8.2)
+
 ## [1.4.0] - 2026-08-25
 
 ### Added

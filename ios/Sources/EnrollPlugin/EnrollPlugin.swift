@@ -12,22 +12,17 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         CAPPluginMethod(name: "startEnroll", returnType: CAPPluginReturnPromise)
     ]
 
-    /// Guard against launching a second flow while one is already running.
-    private var isFlowInProgress = false
-
     /// Saved reference to the current PluginCall so callbacks can resolve/reject it.
     private var savedCall: CAPPluginCall?
+
+    /// True after success/fail so a following dismiss does not also reject as cancel.
+    private var didFinishFlow = false
 
     // ------------------------------------------------------------------
     // MARK: - Plugin method exposed to TypeScript
     // ------------------------------------------------------------------
 
     @objc func startEnroll(_ call: CAPPluginCall) {
-        if isFlowInProgress {
-            call.reject("An enrollment flow is already in progress", "FLOW_IN_PROGRESS")
-            return
-        }
-
         // ---- Required parameters ----
         guard let tenantId = call.getString("tenantId"), !tenantId.isEmpty else {
             call.reject("tenantId is required", "INVALID_ARGUMENT")
@@ -131,16 +126,18 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
         // ---- RTL layout for Arabic ----
         configureLayoutDirection(localizationCode)
 
-        // ---- Save call & mark in progress ----
-        self.savedCall = call
-        self.isFlowInProgress = true
+        // A new startEnroll replaces any previous session so Exit/Cancel then Start works again.
+        if let previousCall = savedCall {
+            previousCall.reject("Enrollment was cancelled", "USER_CANCELLED")
+            savedCall = nil
+        }
+        call.keepAlive = true
+        didFinishFlow = false
 
         // ---- Launch SDK on main thread ----
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            guard let presenterVC = self.bridge?.viewController else {
-                self.isFlowInProgress = false
-                self.savedCall = nil
+            guard let presenterVC = self.rootViewController() else {
                 call.reject("Unable to get presenting view controller", "VIEW_CONTROLLER_ERROR")
                 return
             }
@@ -173,10 +170,10 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
                     enrollInitModel: initModel,
                     presenterVC: presenterVC
                 )
-                presenterVC.present(enrollVC, animated: true)
+                self.presentEnroll(enrollVC, from: presenterVC) {
+                    self.savedCall = call
+                }
             } catch {
-                self.isFlowInProgress = false
-                self.savedCall = nil
                 call.reject("Failed to start enrollment: \(error.localizedDescription)", "ENROLL_LAUNCH_ERROR")
             }
         }
@@ -187,27 +184,91 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
     // ------------------------------------------------------------------
 
     public func enrollDidSucceed(with model: EnrollFramework.EnrollSuccessModel) {
-        isFlowInProgress = false
-        guard let call = savedCall else { return }
-        savedCall = nil
+        settleOnMain {
+            self.didFinishFlow = true
+            guard let call = self.savedCall else { return }
+            self.savedCall = nil
 
-        var result: [String: Any] = [
-            "applicantId": model.applicantId ?? "",
-            "exitStepCompleted": false
-        ]
-        call.resolve(result)
+            let result: [String: Any] = [
+                "applicantId": model.applicantId ?? "",
+                "exitStepCompleted": false
+            ]
+            call.resolve(result)
+        }
     }
 
     public func enrollDidFail(with error: EnrollFramework.EnrollErrorModel) {
-        isFlowInProgress = false
-        guard let call = savedCall else { return }
-        savedCall = nil
+        settleOnMain {
+            self.didFinishFlow = true
+            guard let call = self.savedCall else { return }
+            self.savedCall = nil
 
-        call.reject(error.errorMessage ?? "Unknown error", "ENROLL_ERROR")
+            call.reject(error.errorMessage ?? "Unknown error", "ENROLL_ERROR")
+        }
     }
 
     public func didInitializeRequest(with requestId: String) {
         notifyListeners("onRequestId", data: ["requestId": requestId])
+    }
+
+    /// Called when the SDK UI is dismissed without success/fail (Exit/Cancel).
+    /// Settles the JS promise so the host can enable Start again.
+    private func finishCancelled() {
+        settleOnMain {
+            guard !self.didFinishFlow else { return }
+            guard let call = self.savedCall else { return }
+            self.savedCall = nil
+            self.didFinishFlow = true
+            call.reject("Enrollment was cancelled", "USER_CANCELLED")
+        }
+    }
+
+    private func settleOnMain(_ work: @escaping () -> Void) {
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // MARK: - Presentation
+    // ------------------------------------------------------------------
+
+    /// Window root view controller, matching how the Flutter plugin presents the SDK.
+    private func rootViewController() -> UIViewController? {
+        if let root = UIApplication.shared.delegate?.window??.rootViewController {
+            return root
+        }
+        if let root = bridge?.viewController?.view.window?.rootViewController {
+            return root
+        }
+        return bridge?.viewController
+    }
+
+    /// Present the SDK full screen from the root VC. If a previous session is
+    /// still shown (Exit/Cancel leftover), dismiss it first then present again.
+    /// `savedCall` is attached only after present so a delayed fail from the
+    /// previous session cannot reject the new startEnroll.
+    private func presentEnroll(
+        _ enrollVC: UIViewController,
+        from presenterVC: UIViewController,
+        completion: @escaping () -> Void
+    ) {
+        let host = EnrollHostViewController(enrollViewController: enrollVC)
+        host.onDismissedWithoutResult = { [weak self] in
+            self?.finishCancelled()
+        }
+
+        let present = {
+            presenterVC.present(host, animated: true)
+            completion()
+        }
+        if presenterVC.presentedViewController != nil {
+            presenterVC.dismiss(animated: false, completion: present)
+        } else {
+            present()
+        }
     }
 
     // ------------------------------------------------------------------
@@ -762,5 +823,57 @@ public class EnrollPlugin: CAPPlugin, CAPBridgedPlugin, EnrollCallBack {
                 UITableView.appearance().semanticContentAttribute = .forceLeftToRight
             }
         }
+    }
+}
+
+/// Full-screen host so the SDK cannot sit as a page-sheet over the app.
+/// When Exit/Cancel dismisses without `enrollDidFail`, we settle the JS promise.
+private final class EnrollHostViewController: UIViewController {
+    var onDismissedWithoutResult: (() -> Void)?
+    private let enrollViewController: UIViewController
+
+    init(enrollViewController: UIViewController) {
+        self.enrollViewController = enrollViewController
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+        modalPresentationCapturesStatusBarAppearance = true
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        addChild(enrollViewController)
+        enrollViewController.view.frame = view.bounds
+        enrollViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(enrollViewController.view)
+        enrollViewController.didMove(toParent: self)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        guard isBeingDismissed else { return }
+        onDismissedWithoutResult?()
+    }
+
+    override var childForStatusBarStyle: UIViewController? { enrollViewController }
+    override var childForStatusBarHidden: UIViewController? { enrollViewController }
+    override var childForHomeIndicatorAutoHidden: UIViewController? { enrollViewController }
+    override var childForScreenEdgesDeferringSystemGestures: UIViewController? { enrollViewController }
+
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        enrollViewController.supportedInterfaceOrientations
+    }
+
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        enrollViewController.preferredInterfaceOrientationForPresentation
+    }
+
+    override var shouldAutorotate: Bool {
+        enrollViewController.shouldAutorotate
     }
 }
